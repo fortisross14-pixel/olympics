@@ -20,7 +20,7 @@ export default function HostPicker() {
             <div className={styles.confirmedInner}>
               <div className={styles.num}>Host City</div>
               <div className={styles.name}>
-                {hostCity.countryCode && <Flag code={hostCity.countryCode} className={styles.confirmedFlag} />}
+                {hostCity.countryCode && <Flag code={hostCity.countryCode} size={36} className={styles.confirmedFlag} />}
                 {hostCity.name}
               </div>
               <div className={styles.country}>{hostCity.country}</div>
@@ -68,7 +68,7 @@ function CityCard({ city, index, onSelect }: CityCardProps) {
     <button className={styles.city} onClick={onSelect}>
       <div className={styles.num}>Candidate {String(index + 1).padStart(2, '0')}</div>
       <div className={styles.name}>
-        {city.countryCode && <Flag code={city.countryCode} className={styles.cardFlag} />}
+        {city.countryCode && <Flag code={city.countryCode} size={28} className={styles.cardFlag} />}
         {city.name}
       </div>
       <div className={styles.country}>{city.country}</div>

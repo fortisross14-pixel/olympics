@@ -74,7 +74,7 @@ function AllTimeMedals() {
             <tr key={r.code} className={i === 0 ? styles.leader : ''}>
               <td className={styles.num}>{i + 1}</td>
               <td>
-                <Flag code={r.code} className={styles.flag} />
+                <Flag code={r.code} size={22} className={styles.flag} />
                 <strong className={styles.code}>{r.code}</strong> · {country?.name}
               </td>
               <td className={styles.num}>{r.gold}</td>
@@ -122,7 +122,7 @@ function Records() {
             <td>{event.name}</td>
             <td className={styles.mono}>{record!.display}</td>
             <td>
-              <Flag code={record!.country} className={styles.flag} />
+              <Flag code={record!.country} size={22} className={styles.flag} />
               <strong className={styles.code}>{record!.country}</strong>
             </td>
             <td className={styles.num}>{record!.year}</td>
@@ -155,7 +155,7 @@ function PastCycles() {
             <td>
               {s.leader ? (
                 <>
-                  <Flag code={s.leader} className={styles.flag} />
+                  <Flag code={s.leader} size={22} className={styles.flag} />
                   <strong className={styles.code}>{s.leader}</strong>
                 </>
               ) : '—'}

@@ -98,7 +98,7 @@ export default function MedalTable() {
             <tr key={r.code} className={i === 0 && leaderHasMedals ? styles.leader : ''}>
               <td className={styles.numCol}>{i + 1}</td>
               <td className={styles.countryCell}>
-                <Flag code={r.code} className={styles.flag} />
+                <Flag code={r.code} size={24} className={styles.flag} />
                 <strong>{r.code}</strong> · {r.name}
               </td>
               <td className={styles.numCol}>{r.gold}</td>

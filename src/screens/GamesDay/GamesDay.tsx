@@ -152,7 +152,7 @@ function DayPreview({ eventIds, ratings, qualifiers, cycle, demoEventIds }: Prev
                 {event.name}
               </span>
               <span className={styles.fav}>
-                Favorite: <Flag code={fav?.code ?? ''} className={styles.favFlag} />
+                Favorite: <Flag code={fav?.code ?? ''} size={18} className={styles.favFlag} />
                 <strong>{fav?.code ?? '—'}</strong>
               </span>
             </li>
@@ -196,21 +196,21 @@ function DayResults({ eventIds, results, cycle, demoEventIds }: ResultsProps) {
               <div className={`${styles.medal} ${styles.gold}`}>
                 <div className={styles.pos}>Gold</div>
                 <div className={styles.country}>
-                  <Flag code={gold.country} className={styles.podiumFlag} /> {gold.country}
+                  <Flag code={gold.country} size={30} className={styles.podiumFlag} /> {gold.country}
                 </div>
                 <div className={styles.result}>{formatValue(event, gold.value)}</div>
               </div>
               <div className={`${styles.medal} ${styles.silver}`}>
                 <div className={styles.pos}>Silver</div>
                 <div className={styles.country}>
-                  <Flag code={silver.country} className={styles.podiumFlag} /> {silver.country}
+                  <Flag code={silver.country} size={30} className={styles.podiumFlag} /> {silver.country}
                 </div>
                 <div className={styles.result}>{formatValue(event, silver.value)}</div>
               </div>
               <div className={`${styles.medal} ${styles.bronze}`}>
                 <div className={styles.pos}>Bronze</div>
                 <div className={styles.country}>
-                  <Flag code={bronze.country} className={styles.podiumFlag} /> {bronze.country}
+                  <Flag code={bronze.country} size={30} className={styles.podiumFlag} /> {bronze.country}
                 </div>
                 <div className={styles.result}>{formatValue(event, bronze.value)}</div>
               </div>

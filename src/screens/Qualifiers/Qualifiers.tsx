@@ -72,7 +72,7 @@ export default function Qualifiers() {
                     return (
                       <div key={code} className={styles.qitem}>
                         <span>
-                          <Flag code={code} className={styles.qFlag} /> {code} · {country?.name}
+                          <Flag code={code} size={18} className={styles.qFlag} /> {code} · {country?.name}
                         </span>
                         <span className={styles.ratingDots}>{'●'.repeat(Math.round(rating))}</span>
                       </div>
