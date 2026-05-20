@@ -1,0 +1,302 @@
+/* 15-day slicer */
+.dayStrip {
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  gap: 3px;
+  margin-bottom: 28px;
+  border: 1px solid var(--line);
+  padding: 4px;
+  background: var(--paper-warm);
+}
+
+.dayBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 2px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: var(--font-mono);
+  color: var(--ink);
+  transition: all 0.15s;
+  min-height: 50px;
+  gap: 2px;
+}
+
+.dayBtn:hover {
+  background: rgba(var(--theme-primary-rgb, 193, 39, 45), 0.06);
+}
+
+.dayNum {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.dayCount {
+  font-size: 9px;
+  opacity: 0.55;
+  letter-spacing: 0.5px;
+}
+
+.dayBtn.done {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.dayBtn.done .dayCount {
+  opacity: 0.65;
+}
+
+.dayBtn.next {
+  background: var(--theme-primary);
+  color: white;
+}
+
+.dayBtn.next .dayCount {
+  opacity: 0.85;
+}
+
+.dayBtn.current {
+  outline: 2px solid var(--ink);
+  outline-offset: -1px;
+}
+
+.dayBtn.done.current {
+  outline-color: var(--theme-primary);
+}
+
+/* Preview */
+.preview {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 24px 26px;
+  margin-bottom: 22px;
+  border-radius: 2px;
+}
+
+.previewLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  opacity: 0.6;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.preview ul {
+  list-style: none;
+}
+
+.preview li {
+  padding: 10px 0;
+  border-bottom: 1px dotted rgba(250, 250, 247, 0.15);
+  font-size: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.preview li:last-child {
+  border-bottom: none;
+}
+
+.evName {
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+.fav {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  opacity: 0.75;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.fav strong {
+  color: var(--theme-secondary);
+  margin-left: 2px;
+}
+
+/* Results */
+.eventCard {
+  border: 1px solid var(--line);
+  margin-bottom: 14px;
+  background: var(--paper);
+  animation: slide 0.4s ease;
+  overflow: hidden;
+}
+
+@keyframes slide {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.eventHead {
+  padding: 14px 22px;
+  background: var(--ink);
+  color: var(--paper);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.eventName {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: -0.2px;
+}
+
+.eventSport {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  opacity: 0.55;
+  text-transform: uppercase;
+}
+
+.podium {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.medal {
+  padding: 20px 14px 18px;
+  text-align: center;
+  border-right: 1px solid var(--line);
+}
+
+.medal:last-child {
+  border-right: none;
+}
+
+.pos {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  opacity: 0.6;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.country {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.result {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-top: 6px;
+  opacity: 0.7;
+  min-height: 14px;
+}
+
+.gold {
+  background: linear-gradient(180deg, rgba(201, 169, 97, 0.16), transparent);
+  border-top: 3px solid var(--gold);
+}
+
+.silver {
+  background: linear-gradient(180deg, rgba(184, 184, 184, 0.16), transparent);
+  border-top: 3px solid var(--silver);
+}
+
+.bronze {
+  background: linear-gradient(180deg, rgba(168, 113, 66, 0.16), transparent);
+  border-top: 3px solid var(--bronze);
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+.btn {
+  padding: 12px 26px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
+}
+
+.btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.allDoneNote {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 16px;
+  opacity: 0.75;
+}
+
+/* Demo sport tagging */
+.demoTag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  padding: 2px 5px;
+  background: var(--theme-secondary, var(--gold));
+  color: var(--ink);
+  margin-right: 8px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.demoCard {
+  opacity: 0.92;
+  border-style: dashed;
+}
+
+.evIcon {
+  vertical-align: -3px;
+  margin-right: 8px;
+  color: var(--theme-primary);
+  opacity: 0.85;
+}
+
+.eventHeadIcon {
+  vertical-align: -4px;
+  margin-right: 10px;
+  color: var(--theme-secondary, var(--gold));
+}
+
+.favFlag {
+  font-size: 14px;
+  margin-right: 3px;
+  vertical-align: -1px;
+}
+
+.podiumFlag {
+  font-size: 22px;
+  vertical-align: -2px;
+  margin-right: 4px;
+}

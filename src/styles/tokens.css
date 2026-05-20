@@ -1,0 +1,23 @@
+:root {
+  /* base palette — these don't change with host */
+  --ink: #1a1a1a;
+  --paper: #fafaf7;
+  --paper-warm: #f5f1e8;
+  --gold: #c9a961;
+  --silver: #b8b8b8;
+  --bronze: #a87142;
+  --line: rgba(26, 26, 26, 0.12);
+
+  /* default theme — overridden by host city when one is selected */
+  --theme-primary: #c1272d;   /* IOC red as default */
+  --theme-secondary: #1a1a1a;
+  --theme-primary-soft: rgba(193, 39, 45, 0.08);
+
+  /* fonts */
+  --font-display: 'Marcellus', 'Trajan Pro', Georgia, serif;
+  --font-body: 'Outfit', 'Helvetica Neue', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* sizing */
+  --frame-max: 1100px;
+}

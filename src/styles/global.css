@@ -1,0 +1,51 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  min-height: 100vh;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight: 400;
+  background-image:
+    radial-gradient(circle at 15% 8%, var(--theme-primary-soft), transparent 45%),
+    radial-gradient(circle at 88% 92%, rgba(201, 169, 97, 0.06), transparent 45%);
+  padding: 24px;
+  transition: background-image 0.6s ease;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 400;
+  margin-bottom: 6px;
+  letter-spacing: -0.5px;
+  line-height: 1.05;
+}
+
+h2 em {
+  color: var(--theme-primary);
+  font-style: italic;
+}
+
+.subtitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.55;
+  margin-bottom: 28px;
+}

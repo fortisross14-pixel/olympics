@@ -1,0 +1,157 @@
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.col {
+  min-width: 0;
+}
+
+.colHeader {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 500;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+  cursor: pointer;
+  transition: padding 0.15s, background 0.15s;
+}
+
+.row:hover {
+  padding-left: 6px;
+  background: rgba(193, 39, 45, 0.04);
+}
+
+.rowActive {
+  background: var(--ink);
+  color: var(--paper);
+  padding-left: 8px !important;
+  padding-right: 8px;
+}
+
+.rowLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  opacity: 0.6;
+}
+
+.rowActive .rowLabel {
+  opacity: 0.7;
+  color: var(--paper);
+}
+
+.detail {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 22px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.8;
+  min-height: 280px;
+  position: sticky;
+  top: 24px;
+}
+
+.detailTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.detailSub {
+  font-size: 10px;
+  letter-spacing: 2px;
+  opacity: 0.6;
+  margin-bottom: 18px;
+  text-transform: uppercase;
+}
+
+.qlist {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+}
+
+.qitem {
+  font-size: 11px;
+  padding: 4px 0;
+  border-bottom: 1px dotted rgba(244, 237, 224, 0.2);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ratingDots {
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+/* Demo sport tagging */
+.demoRow {
+  font-style: italic;
+}
+
+.demoTag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  padding: 2px 5px;
+  background: var(--theme-secondary, var(--gold));
+  color: var(--ink);
+  margin-right: 8px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.demoTagDark {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  padding: 2px 5px;
+  background: var(--theme-secondary, var(--gold));
+  color: var(--ink);
+  margin-right: 8px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.evCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.rowIcon {
+  margin-right: 8px;
+  color: var(--theme-primary);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.detailIcon {
+  vertical-align: -4px;
+  margin-right: 10px;
+  color: var(--theme-secondary, var(--gold));
+}
+
+.qFlag {
+  font-size: 14px;
+  margin-right: 4px;
+  vertical-align: -1px;
+}

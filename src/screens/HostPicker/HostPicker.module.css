@@ -1,0 +1,177 @@
+.cities {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.city {
+  border: 1px solid var(--ink);
+  padding: 26px 22px;
+  background: var(--paper);
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  font-family: inherit;
+  color: var(--ink);
+}
+
+.city::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.3s;
+  z-index: 0;
+}
+
+.city:hover::before {
+  transform: scaleY(1);
+}
+
+.city > * {
+  position: relative;
+  z-index: 1;
+}
+
+.city:hover > *:not(.themeChips) {
+  color: var(--paper);
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  opacity: 0.5;
+  text-transform: uppercase;
+}
+
+.name {
+  font-size: 30px;
+  font-weight: 400;
+  margin-top: 8px;
+  line-height: 1;
+  font-family: var(--font-display);
+}
+
+.country {
+  font-style: italic;
+  font-size: 15px;
+  opacity: 0.7;
+  margin-top: 4px;
+  font-family: var(--font-display);
+}
+
+.themeChips {
+  display: flex;
+  gap: 6px;
+  margin-top: 18px;
+}
+
+.chip {
+  width: 28px;
+  height: 14px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.bonus {
+  margin-top: 18px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-top: 1px solid currentColor;
+  padding-top: 12px;
+  opacity: 0.7;
+}
+
+/* Confirmed */
+.confirmed {
+  max-width: 440px;
+}
+
+.confirmedCard {
+  padding: 4px;
+}
+
+.confirmedInner {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 32px 26px;
+}
+
+.confirmedCard .num,
+.confirmedCard .name,
+.confirmedCard .country,
+.confirmedCard .bonus {
+  color: var(--paper);
+}
+
+.boost {
+  margin-top: 16px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--theme-secondary);
+}
+
+.cardFlag {
+  font-size: 22px;
+  margin-right: 6px;
+  vertical-align: -3px;
+}
+
+.confirmedFlag {
+  font-size: 28px;
+  margin-right: 10px;
+  vertical-align: -4px;
+}
+
+.cardDemos {
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.85;
+  line-height: 1.5;
+}
+
+.demoTag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 1.5px;
+  padding: 1px 4px;
+  background: var(--gold);
+  color: var(--ink);
+  margin-right: 6px;
+  border-radius: 2px;
+  vertical-align: 1px;
+}
+
+.demoList {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.demoLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.65;
+  margin-bottom: 4px;
+}
+
+.demoNames {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 16px;
+}

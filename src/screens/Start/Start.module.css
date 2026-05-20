@@ -1,0 +1,89 @@
+.block {
+  text-align: center;
+  padding: 60px 20px 40px;
+}
+
+.block h1 {
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -2px;
+}
+
+.block h1 em {
+  color: var(--theme-primary);
+  font-style: italic;
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin: 20px 0 36px;
+  opacity: 0.6;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.note {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 16px;
+  opacity: 0.7;
+  max-width: 480px;
+  line-height: 1.5;
+}
+
+.btn {
+  padding: 14px 32px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--ink);
+}
+
+.ghost:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.small {
+  padding: 8px 18px;
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+.small:hover {
+  opacity: 1;
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
+  color: var(--paper);
+}
+
+.danger {
+  margin-top: 60px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: center;
+}
