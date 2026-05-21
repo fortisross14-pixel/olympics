@@ -1,22 +1,34 @@
 :root {
   /* base palette — these don't change with host */
-  --ink: #1a1a1a;
-  --paper: #fafaf7;
-  --paper-warm: #f5f1e8;
-  --gold: #c9a961;
-  --silver: #b8b8b8;
-  --bronze: #a87142;
-  --line: rgba(26, 26, 26, 0.12);
+  --ink: #16161a;
+  --ink-soft: #5a5a64;
+  --paper: #f6f4ef;
+  --paper-warm: #faf8f3;
+  --card: #ffffff;
+  --gold: #c79a3e;
+  --silver: #a8a8b0;
+  --bronze: #b06f3c;
+  --line: rgba(22, 22, 26, 0.10);
 
   /* default theme — overridden by host city when one is selected */
   --theme-primary: #c1272d;   /* IOC red as default */
   --theme-secondary: #1a1a1a;
   --theme-primary-soft: rgba(193, 39, 45, 0.08);
+  --theme-primary-rgb: 193, 39, 45;
 
   /* fonts */
-  --font-display: 'Marcellus', 'Trajan Pro', Georgia, serif;
-  --font-body: 'Outfit', 'Helvetica Neue', system-ui, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Archivo', 'Helvetica Neue', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* radii */
+  --radius-lg: 16px;
+  --radius-md: 11px;
+  --radius-sm: 7px;
+
+  /* shadows */
+  --shadow-card: 0 1px 2px rgba(22, 22, 26, 0.04), 0 8px 24px rgba(22, 22, 26, 0.06);
+  --shadow-pop: 0 4px 12px rgba(22, 22, 26, 0.10), 0 16px 40px rgba(22, 22, 26, 0.10);
 
   /* sizing */
   --frame-max: 1100px;

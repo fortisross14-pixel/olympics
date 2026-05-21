@@ -5,10 +5,12 @@
 }
 
 .city {
-  border: 1px solid var(--ink);
-  padding: 26px 22px;
-  background: var(--paper);
-  transition: all 0.25s;
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 24px 22px;
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s, box-shadow 0.2s;
   position: relative;
   overflow: hidden;
   text-align: left;
@@ -19,47 +21,38 @@
 .city::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background: var(--ink);
-  transform: scaleY(0);
-  transform-origin: bottom;
-  transition: transform 0.3s;
-  z-index: 0;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary));
 }
 
-.city:hover::before {
-  transform: scaleY(1);
-}
-
-.city > * {
-  position: relative;
-  z-index: 1;
-}
-
-.city:hover > *:not(.themeChips) {
-  color: var(--paper);
+.city:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-pop);
 }
 
 .num {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 2px;
-  opacity: 0.5;
+  color: var(--ink-soft);
   text-transform: uppercase;
 }
 
 .name {
-  font-size: 30px;
-  font-weight: 400;
-  margin-top: 8px;
-  line-height: 1;
+  font-size: 29px;
+  font-weight: 600;
+  margin-top: 7px;
+  line-height: 1.05;
   font-family: var(--font-display);
+  display: flex;
+  align-items: center;
 }
 
 .country {
   font-style: italic;
   font-size: 15px;
-  opacity: 0.7;
+  color: var(--ink-soft);
   margin-top: 4px;
   font-family: var(--font-display);
 }
@@ -67,69 +60,67 @@
 .themeChips {
   display: flex;
   gap: 6px;
-  margin-top: 18px;
+  margin-top: 16px;
 }
 
 .chip {
-  width: 28px;
-  height: 14px;
-  border-radius: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  width: 30px;
+  height: 15px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 .bonus {
-  margin-top: 18px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  border-top: 1px solid currentColor;
-  padding-top: 12px;
-  opacity: 0.7;
-}
-
-/* Confirmed */
-.confirmed {
-  max-width: 440px;
-}
-
-.confirmedCard {
-  padding: 4px;
-}
-
-.confirmedInner {
-  background: var(--ink);
-  color: var(--paper);
-  padding: 32px 26px;
-}
-
-.confirmedCard .num,
-.confirmedCard .name,
-.confirmedCard .country,
-.confirmedCard .bonus {
-  color: var(--paper);
-}
-
-.boost {
   margin-top: 16px;
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--theme-secondary);
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  color: var(--ink-soft);
+}
+
+/* Confirmed */
+.confirmed {
+  max-width: 460px;
+}
+
+.confirmedCard {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-pop);
+}
+
+.confirmedInner {
+  background: linear-gradient(150deg, var(--theme-primary), var(--theme-secondary));
+  color: #fff;
+  padding: 32px 28px;
+}
+
+.confirmedCard .num { color: rgba(255, 255, 255, 0.65); }
+.confirmedCard .name { color: #fff; }
+.confirmedCard .country { color: rgba(255, 255, 255, 0.8); }
+.confirmedCard .bonus {
+  color: rgba(255, 255, 255, 0.85);
+  border-top-color: rgba(255, 255, 255, 0.2);
+}
+
+.boost {
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .cardFlag {
-  font-size: 22px;
-  margin-right: 6px;
-  vertical-align: -3px;
+  margin-right: 8px;
 }
 
 .confirmedFlag {
-  font-size: 28px;
-  margin-right: 10px;
-  vertical-align: -4px;
+  margin-right: 11px;
 }
 
 .cardDemos {
@@ -138,7 +129,7 @@
   font-size: 9.5px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  opacity: 0.85;
+  color: var(--ink-soft);
   line-height: 1.5;
 }
 
@@ -146,12 +137,13 @@
   display: inline-block;
   font-family: var(--font-mono);
   font-size: 8.5px;
+  font-weight: 700;
   letter-spacing: 1.5px;
-  padding: 1px 4px;
+  padding: 2px 5px;
   background: var(--gold);
-  color: var(--ink);
+  color: #fff;
   margin-right: 6px;
-  border-radius: 2px;
+  border-radius: 4px;
   vertical-align: 1px;
 }
 
@@ -174,4 +166,8 @@
   font-family: var(--font-display);
   font-style: italic;
   font-size: 16px;
+}
+
+@media (max-width: 760px) {
+  .cities { grid-template-columns: 1fr; }
 }

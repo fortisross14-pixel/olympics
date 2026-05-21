@@ -77,12 +77,16 @@ function scoreToValue(
       return Math.round(val * 100) / 100;
     }
     case 'time': {
-      // Marathon-style: baseline is in seconds, format hh:mm:ss
+      // Endurance events — baseline in seconds. Show hh:mm:ss for
+      // events over an hour, mm:ss for shorter ones (e.g. canoe sprint).
       const secs = event.baseline + gap * 1.5 + rank * 6;
       const hh = Math.floor(secs / 3600);
       const mm = Math.floor((secs % 3600) / 60);
       const ss = Math.floor(secs % 60);
-      return `${hh}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+      if (hh > 0) {
+        return `${hh}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+      }
+      return `${mm}:${String(ss).padStart(2, '0')}`;
     }
     case 'rank':
       return null;

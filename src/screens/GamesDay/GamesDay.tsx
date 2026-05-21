@@ -10,6 +10,9 @@ import NationChip from '../../components/NationChip/NationChip';
 import { legendsInEvent } from '../../engine/legends';
 import { useUIStore } from '../../store/uiStore';
 
+/** Day-of-week labels for the 15-day slicer (Games open on a Saturday). */
+const DOW = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+
 export default function GamesDay() {
   const cycle = useCycleStore((s) => s.currentCycle);
   const legends = useCycleStore((s) => s.legends);
@@ -77,6 +80,7 @@ export default function GamesDay() {
           const done = simulatedSet.has(d.day);
           const isCurrent = d.day === currentDay;
           const isNextPending = d.day === nextPendingDay;
+          const dow = DOW[(d.day - 1) % 7];
           return (
             <button
               key={d.day}
@@ -89,11 +93,28 @@ export default function GamesDay() {
               onClick={() => goToDay(d.day)}
               title={`Day ${d.day} · ${d.eventIds.length} events`}
             >
+              <span className={styles.dayDow}>{dow}</span>
               <span className={styles.dayNum}>{d.day}</span>
-              <span className={styles.dayCount}>{d.eventIds.length}</span>
+              <span className={styles.dayCount}>{d.eventIds.length} ev</span>
             </button>
           );
         })}
+      </div>
+
+      {/* Day banner */}
+      <div className={styles.dayBanner}>
+        <div className={styles.bannerLabel}>
+          {dayDone ? 'Completed' : isViewingNextPending ? 'Up Next' : 'On the Schedule'}
+        </div>
+        <div className={styles.bannerRow}>
+          <div className={styles.bannerTitle}>
+            {cycle.hostCity?.name ?? 'The Games'} · Day {currentDay}
+          </div>
+          <div className={styles.bannerStat}>
+            <span className={styles.bannerNum}>{currentPlan.eventIds.length}</span>
+            <span className={styles.bannerStatLabel}>Finals</span>
+          </div>
+        </div>
       </div>
 
       {/* Body: preview (any unsimulated day) or results (simulated days) */}

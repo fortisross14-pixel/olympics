@@ -4,34 +4,31 @@ interface Props {
 }
 
 /**
- * Stylized flame mark — original silhouette evoking the Olympic torch
- * tradition. The shape is two interlocking curves (rising, returning),
- * suggesting both flame and cycle. Filled with current theme primary.
+ * Stylized flame mark — sits inside the gradient brand tile, so it
+ * renders as a simple white glyph with a tinted inner curl. The shape
+ * evokes both a flame and a cycle (rising curve returning on itself).
  */
-export default function Flame({ className, size = 36 }: Props) {
+export default function Flame({ className, size = 22 }: Props) {
   return (
     <svg
       className={className}
       width={size}
       height={size}
-      viewBox="0 0 36 36"
+      viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      {/* Outer flame shape — fills with theme primary */}
+      {/* Outer flame — white against the gradient tile */}
       <path
-        d="M18 4 C 14 9, 11 12, 11 17 C 11 21, 14 24, 18 24 C 22 24, 25 21, 25 17 C 25 13, 22 11, 20 8 C 19 7, 18.5 5.5, 18 4 Z"
+        d="M12 2C9 6 7 9 7 13a5 5 0 0010 0c0-3-2-5-3.5-7.5C13 4 12.5 3 12 2z"
+        fill="#fff"
+      />
+      {/* Inner curl — tinted with theme primary for depth */}
+      <path
+        d="M12 9c-1.5 2-2.5 3.5-2.5 5.5a2.5 2.5 0 003 2.4c-1-.8-1.5-2-1-3.4.4-1.3 1.3-2.5 1.5-4.5z"
         fill="var(--theme-primary, #c1272d)"
       />
-      {/* Inner negative-space curl — creates depth */}
-      <path
-        d="M18 11 C 16 13, 15 15, 15 17.5 C 15 19.5, 16.5 21, 18.5 21 C 17 20, 16 18.5, 16.5 17 C 17 15, 18 13.5, 18 11 Z"
-        fill="var(--paper, #fafaf7)"
-      />
-      {/* Base mark — small fixed-color anchor */}
-      <rect x="13" y="26" width="10" height="2" rx="1" fill="var(--ink, #1a1a1a)" />
-      <rect x="14.5" y="29" width="7" height="2" rx="1" fill="var(--ink, #1a1a1a)" opacity="0.5" />
     </svg>
   );
 }
