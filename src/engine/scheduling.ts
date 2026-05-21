@@ -32,6 +32,11 @@ const WEEK_1_SPORTS = new Set([
   'tabletennis',
   'rowing',
   'waterpolo',    // group stages week 1
+  'diving',
+  'shooting',
+  'canoe',
+  'equestrian',
+  'badminton',
 ]);
 
 /** Sports that primarily run in week 2 (days 8-15). */
@@ -46,6 +51,9 @@ const WEEK_2_SPORTS = new Set([
   'handball',
   'hockey',
   'rugby',
+  'triathlon',
+  'sailing',
+  'golf',
 ]);
 
 /**
@@ -67,6 +75,8 @@ const MARQUEE_EVENTS = new Set([
   'm_box_hw',
   // Swimming relays (end of week 1 — closing-night spectacle)
   'm4x100fr', 'mix4x100im',
+  // Triathlon + golf finals (week 2 showcase)
+  'm_tri', 'w_tri', 'm_golf', 'w_golf',
 ]);
 
 function shuffle<T>(arr: T[]): T[] {

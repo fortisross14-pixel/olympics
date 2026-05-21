@@ -375,3 +375,25 @@
   padding: 8px 20px;
   background: rgba(201, 169, 97, 0.14);
 }
+
+/* View full result button */
+.eventHead { cursor: pointer; }
+
+.fullResultBtn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--theme-primary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.fullResultBtn:hover {
+  background: rgba(var(--theme-primary-rgb, 193, 39, 45), 0.07);
+}

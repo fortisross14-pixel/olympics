@@ -8,11 +8,13 @@ import Qualifiers from './screens/Qualifiers/Qualifiers';
 import GamesDay from './screens/GamesDay/GamesDay';
 import MedalTable from './screens/MedalTable/MedalTable';
 import History from './screens/History/History';
+import Stars from './screens/Stars/Stars';
 import Flame from './components/Flame/Flame';
 import NationModal from './components/NationModal/NationModal';
 import LegendModal from './components/LegendModal/LegendModal';
+import EventResultModal from './components/EventResultModal/EventResultModal';
 
-export type TabId = 'start' | 'host' | 'rankings' | 'qualify' | 'sim' | 'table' | 'history';
+export type TabId = 'start' | 'host' | 'rankings' | 'qualify' | 'sim' | 'table' | 'stars' | 'history';
 
 interface Tab {
   id: TabId;
@@ -26,6 +28,7 @@ const TABS: Tab[] = [
   { id: 'qualify', label: 'Qualifiers' },
   { id: 'sim', label: 'The Games' },
   { id: 'table', label: 'Medal Table' },
+  { id: 'stars', label: 'Stars' },
   { id: 'history', label: 'History' },
 ];
 
@@ -69,6 +72,7 @@ export default function App() {
     qualify: inCycle && qualified,
     sim: inCycle && qualified,
     table: inCycle && qualified,
+    stars: inCycle && qualified,
     history: hasHistory,
   };
 
@@ -128,10 +132,12 @@ export default function App() {
         {active === 'sim' && <GamesDay />}
         {active === 'table' && <MedalTable />}
         {active === 'history' && <History />}
+        {active === 'stars' && <Stars />}
       </main>
 
       <NationModal />
       <LegendModal />
+      <EventResultModal />
     </div>
   );
 }

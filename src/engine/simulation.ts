@@ -53,7 +53,7 @@ function scoreFinalists(
 function scoreToValue(
   event: SportEvent,
   score: number,
-  rank: 1 | 2 | 3,
+  rank: number,
 ): number | string | null {
   if (event.baseline === null) return null; // rank-only event
 
@@ -103,16 +103,18 @@ export function simulateEvent(
   cycleYear: CycleYear,
 ): EventResult {
   const scored = scoreFinalists(qualifiers, ratings, sportId);
-  const top3 = scored.slice(0, 3);
 
-  const podium = top3.map((p, i) => {
-    const rank = (i + 1) as 1 | 2 | 3;
+  // Full ordered field — every finalist gets a rank and a value.
+  const standings: PodiumPlace[] = scored.map((p, i) => {
+    const rank = i + 1;
     return {
       country: p.country,
       rank,
       value: scoreToValue(event, p.score, rank),
     } satisfies PodiumPlace;
   });
+
+  const podium = standings.slice(0, 3) as [PodiumPlace, PodiumPlace, PodiumPlace];
 
   // The pre-race favorite = highest-rated qualifier (ties broken by order)
   let favorite = qualifiers[0];
@@ -133,7 +135,8 @@ export function simulateEvent(
   return {
     eventId: event.id,
     cycleYear,
-    podium: podium as [PodiumPlace, PodiumPlace, PodiumPlace],
+    standings,
+    podium,
     favorite,
     upset,
   };

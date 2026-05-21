@@ -271,6 +271,100 @@ export const SPORTS: Sport[] = [
       { id: 'w_wl_87', name: "Women's -87kg", unit: 'm', baseline: 290 },
     ],
   },
+
+  // ============ TRIATHLON (3) ============
+  {
+    id: 'triathlon',
+    name: 'Triathlon',
+    events: [
+      { id: 'm_tri', name: "Men's Triathlon", unit: 'time', baseline: 6300 },
+      { id: 'w_tri', name: "Women's Triathlon", unit: 'time', baseline: 6900 },
+      { id: 'mix_tri_relay', name: 'Mixed Relay Triathlon', unit: 'time', baseline: 4680 },
+    ],
+  },
+
+  // ============ DIVING (5) ============
+  {
+    id: 'diving',
+    name: 'Diving',
+    events: [
+      { id: 'm_dive_3m', name: "Men's 3m Springboard", unit: 'pts', baseline: 540 },
+      { id: 'w_dive_3m', name: "Women's 3m Springboard", unit: 'pts', baseline: 380 },
+      { id: 'm_dive_10m', name: "Men's 10m Platform", unit: 'pts', baseline: 560 },
+      { id: 'w_dive_10m', name: "Women's 10m Platform", unit: 'pts', baseline: 440 },
+      { id: 'mix_dive_sync', name: 'Mixed Synchronised 10m', unit: 'pts', baseline: 340 },
+    ],
+  },
+
+  // ============ SAILING (5) ============
+  {
+    id: 'sailing',
+    name: 'Sailing',
+    events: [
+      { id: 'm_sail_laser', name: "Men's Laser", unit: 'rank', baseline: null },
+      { id: 'w_sail_radial', name: "Women's Laser Radial", unit: 'rank', baseline: null },
+      { id: 'm_sail_finn', name: "Men's Finn", unit: 'rank', baseline: null },
+      { id: 'mix_sail_49er', name: 'Mixed 49er', unit: 'rank', baseline: null },
+      { id: 'mix_sail_nacra', name: 'Mixed Nacra 17', unit: 'rank', baseline: null },
+    ],
+  },
+
+  // ============ CANOE / KAYAK (5) ============
+  {
+    id: 'canoe',
+    name: 'Canoe / Kayak',
+    events: [
+      { id: 'm_k1_sprint', name: "Men's K-1 Sprint", unit: 'time', baseline: 205 },
+      { id: 'w_k1_sprint', name: "Women's K-1 Sprint", unit: 'time', baseline: 228 },
+      { id: 'm_c1_slalom', name: "Men's C-1 Slalom", unit: 'time', baseline: 96 },
+      { id: 'w_k1_slalom', name: "Women's K-1 Slalom", unit: 'time', baseline: 104 },
+      { id: 'm_c2_sprint', name: "Men's C-2 Sprint", unit: 'time', baseline: 192 },
+    ],
+  },
+
+  // ============ SHOOTING (4) ============
+  {
+    id: 'shooting',
+    name: 'Shooting',
+    events: [
+      { id: 'm_shoot_rifle', name: "Men's 10m Air Rifle", unit: 'pts', baseline: 252 },
+      { id: 'w_shoot_pistol', name: "Women's 10m Air Pistol", unit: 'pts', baseline: 244 },
+      { id: 'm_shoot_trap', name: "Men's Trap", unit: 'pts', baseline: 48 },
+      { id: 'mix_shoot_team', name: 'Mixed Team Air Rifle', unit: 'pts', baseline: 500 },
+    ],
+  },
+
+  // ============ BADMINTON (4) ============
+  {
+    id: 'badminton',
+    name: 'Badminton',
+    events: [
+      { id: 'm_bad_s', name: "Men's Singles", unit: 'rank', baseline: null },
+      { id: 'w_bad_s', name: "Women's Singles", unit: 'rank', baseline: null },
+      { id: 'm_bad_d', name: "Men's Doubles", unit: 'rank', baseline: null },
+      { id: 'mix_bad_d', name: 'Mixed Doubles', unit: 'rank', baseline: null },
+    ],
+  },
+
+  // ============ GOLF (2) ============
+  {
+    id: 'golf',
+    name: 'Golf',
+    events: [
+      { id: 'm_golf', name: "Men's Individual", unit: 'rank', baseline: null },
+      { id: 'w_golf', name: "Women's Individual", unit: 'rank', baseline: null },
+    ],
+  },
+
+  // ============ EQUESTRIAN (2) ============
+  {
+    id: 'equestrian',
+    name: 'Equestrian',
+    events: [
+      { id: 'eq_jump_ind', name: 'Individual Jumping', unit: 'rank', baseline: null },
+      { id: 'eq_jump_team', name: 'Team Jumping', unit: 'rank', baseline: null },
+    ],
+  },
 ];
 
 export function findEvent(eventId: string): SportEvent | undefined {

@@ -196,6 +196,7 @@ interface ResultsProps {
 
 function DayResults({ eventIds, results, cycle, demoEventIds, legends }: ResultsProps) {
   const openLegend = useUIStore((s) => s.openLegend);
+  const openEvent = useUIStore((s) => s.openEvent);
   return (
     <div>
       {eventIds.map((id) => {
@@ -211,7 +212,12 @@ function DayResults({ eventIds, results, cycle, demoEventIds, legends }: Results
             key={id}
             className={`${styles.eventCard} ${isDemo ? styles.demoCard : ''} ${evLegends.length > 0 ? styles.legendCard : ''}`}
           >
-            <div className={styles.eventHead}>
+            <div
+              className={styles.eventHead}
+              onClick={() => openEvent(id)}
+              role="button"
+              title="View full 1-8 result"
+            >
               <div className={styles.eventName}>
                 <SportIcon id={sport.id} size={20} className={styles.eventHeadIcon} />
                 {isDemo && <span className={styles.demoTag}>DEMO</span>}
@@ -266,6 +272,9 @@ function DayResults({ eventIds, results, cycle, demoEventIds, legends }: Results
                 <div className={styles.result}>{formatValue(event, bronze.value)}</div>
               </div>
             </div>
+            <button className={styles.fullResultBtn} onClick={() => openEvent(id)}>
+              View full result · places 1–8 →
+            </button>
           </div>
         );
       })}

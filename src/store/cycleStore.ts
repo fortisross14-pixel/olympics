@@ -25,8 +25,8 @@ import {
 import { pickRandom } from '../engine/random';
 
 /** Bump this if the persisted shape ever changes incompatibly. */
-const STORAGE_VERSION = 4;
-const STORAGE_KEY = 'the-cycle:v4';
+const STORAGE_VERSION = 5;
+const STORAGE_KEY = 'the-cycle:v5';
 
 const FIRST_CYCLE_YEAR = 2028;
 const YEARS_BETWEEN_CYCLES = 4;

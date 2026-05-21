@@ -77,6 +77,30 @@ const PATHS: Record<string, string> = {
   // Weightlifting — lifter with barbell overhead
   weightlifting: 'M11 4a2 2 0 110 4 2 2 0 010-4zm-1 5l-2 2 1 2 2 1v7h2v-7l2-1 1-2-2-2zM4 11h2v3H4zm14 0h2v3h-2zM3 9h1v7H3zm17 0h1v7h-1z',
 
+  // Triathlon — runner with motion lines (composite discipline)
+  triathlon: 'M14 4a2 2 0 110 4 2 2 0 010-4zm-1 5l-3 4 1 3-3 4h2l3-4-1-2 2-2 1 4 3 1v-2l-2-1-1-3-1-2zM3 8h4v1H3zm0 4h3v1H3zm0 4h4v1H3z',
+
+  // Diving — figure arcing head-first
+  diving: 'M15 3a2 2 0 110 4 2 2 0 010-4zm-1 5l-4 3 1 2-3 2 1 2 4-3-1-2 3-2 2 3 3-1-1-3-3-2-2-1zM3 19h18v1H3z',
+
+  // Sailing — boat with triangular sail
+  sailing: 'M12 3v13M12 4l7 11h-7zM11 16h2l3 3H8zM3 19h18v1H3z',
+
+  // Canoe / Kayak — paddler with double paddle
+  canoe: 'M12 4a2 2 0 110 4 2 2 0 010-4zm-1 5l-1 4 2 2-1 3h2l1-3-2-2 1-3zM4 8l16 8-1 2L3 10zM5 16h14l-2 3H7z',
+
+  // Shooting — figure aiming
+  shooting: 'M8 5a2 2 0 110 4 2 2 0 010-4zm-1 5l-2 3 2 2v6h2v-5l2-1 2 2 8-2v-2l-7 2-2-2-1-1-2-1zm12 1l3-1v1l-3 1z',
+
+  // Badminton — racquet with shuttlecock
+  badminton: 'M13 4a2 2 0 110 4 2 2 0 010-4zm-1 5l-3 3 2 2-1 6h2l1-5 2-1 3 3 2-1-3-4-2-1zm5-4l2 1 1 2-1 2-2 1-2-1-1-2 1-2z',
+
+  // Golf — figure with club
+  golf: 'M10 4a2 2 0 110 4 2 2 0 010-4zm-1 5l-2 3 2 2-1 6h2l1-5 3-9-1-1zm-2 11a1 1 0 110 2 1 1 0 010-2zM14 7l4 2-4 2z',
+
+  // Equestrian — horse and rider
+  equestrian: 'M14 4a2 2 0 110 4 2 2 0 010-4zM4 13l3-2 4 1 3-3 5 1 2 5h-3l-1-3-3-1-3 2-4-1 1 5H8l-1-5-2 1-1 1z',
+
   // ====== Demonstration sport icons (less detailed, generic) ======
 
   // Padel / Squash — racquet with smaller frame

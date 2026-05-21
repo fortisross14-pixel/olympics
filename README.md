@@ -44,14 +44,16 @@ One-time GitHub setup: **Settings → Pages → Source = GitHub Actions**
 - [x] **Iteration 3** — Engine: ratings & qualifying + functional Host & Qualifiers screens
 - [x] **Iteration 4** — Engine: scheduling & simulation + GamesDay screen
 - [x] **Iteration 5** — MedalTable screen
-- [x] **Iteration 6** — Database expansion (20 sports, 106 events, 20 countries, 38 legends)
+- [x] **Iteration 6** — Database expansion (28 sports, 136 events, 20 countries, 38 legends)
 - [x] **Iteration 7** — 15-day calendar, day slicer, host themes, Paris-style visual pivot, persistence, multi-cycle history
 - [x] **Iteration 8a** — Balancing: budget-based ratings, hard-coded specialties, host bonus +0.7, variance tuned for ~60% favorite-win, demonstration sports (host-exclusive, separate medal table)
 - [x] **Iteration 8b** — Sport icons (hand-drawn pictograms) + country flags (Unicode emoji)
 - [x] **Iteration 9a** — Nation Rankings screen, clickable nation popup, medal-table sport + gender filters, centered medal columns, upset tags, SVG flags (Chrome-safe)
 - [x] **Iteration 9b** — Full legend system: 8-12 legends with culture-matched names, rarity boosts wired into ratings, gender/event assignment, retirement churn, Legends sub-tab, legend popup, calendar integration
 
-- [ ] Iteration 10 — Polish: cinematic reveals, sound
+- [x] **Iteration 10a** — Full 8-place event standings + event result modal, top-level Stars tab (legend browser), History Legends sub-tab, Records sport filter
+- [ ] Iteration 10b — Visual overhaul (Fraunces/Archivo, rounded cards, gradients, broadcast result cards, responsive)
+- [ ] Iteration 11 — Polish: cinematic reveals, sound
 
 ## What works right now (after iteration 8b)
 
@@ -81,7 +83,7 @@ One-time GitHub setup: **Settings → Pages → Source = GitHub Actions**
 ## Data overview
 
 - **20 countries** across 4 tiers, with real-world specialties (USA → athletics/swimming/basketball; Kenya → athletics; etc.)
-- **20 core sports**, **106 core events** — athletics and swimming dominate as in real Olympics
+- **28 core sports**, **136 core events** — athletics and swimming dominate as in real Olympics
 - **17 host cities** with 2-color themes + 0-3 demo sports each (Tokyo brings Karate + Sumo, Mumbai brings Cricket + Kabaddi, etc.)
 - **38 fictional legends** in `data/legends.ts` (engine wiring is iter 9)
 

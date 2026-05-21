@@ -98,7 +98,7 @@ export type Schedule = DayPlan[];
 
 export interface PodiumPlace {
   country: CountryCode;
-  rank: 1 | 2 | 3;
+  rank: number;
   /**
    * Numeric value for timed/measured/scored events.
    * String for 'time' unit. Null for 'rank' events.
@@ -109,6 +109,9 @@ export interface PodiumPlace {
 export interface EventResult {
   eventId: string;
   cycleYear: CycleYear;
+  /** Full ordered field — all 8 finalists, rank 1-8. */
+  standings: PodiumPlace[];
+  /** Convenience: first 3 of standings. */
   podium: [PodiumPlace, PodiumPlace, PodiumPlace];
   /** Country that had the highest rating going in (the pre-race favorite) */
   favorite: CountryCode;
