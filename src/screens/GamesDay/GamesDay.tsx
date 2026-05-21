@@ -3,12 +3,16 @@ import styles from './GamesDay.module.css';
 import { useCycleStore } from '../../store/cycleStore';
 import { findEventInCycle, findSportInCycle } from '../../engine/lookup';
 import { formatValue } from '../../engine/results';
-import type { Cycle, EventResult, Ratings, Qualifiers } from '../../engine/types';
+import type { Cycle, EventResult, Ratings, Qualifiers, Legend } from '../../engine/types';
 import SportIcon from '../../components/SportIcon/SportIcon';
 import Flag from '../../components/Flag/Flag';
+import NationChip from '../../components/NationChip/NationChip';
+import { legendsInEvent } from '../../engine/legends';
+import { useUIStore } from '../../store/uiStore';
 
 export default function GamesDay() {
   const cycle = useCycleStore((s) => s.currentCycle);
+  const legends = useCycleStore((s) => s.legends);
   const simulateNextDay = useCycleStore((s) => s.simulateNextDay);
   const goToDay = useCycleStore((s) => s.goToDay);
 
@@ -94,9 +98,9 @@ export default function GamesDay() {
 
       {/* Body: preview (any unsimulated day) or results (simulated days) */}
       {dayDone ? (
-        <DayResults eventIds={currentPlan.eventIds} results={results} cycle={cycle} demoEventIds={demoEventIds} />
+        <DayResults eventIds={currentPlan.eventIds} results={results} cycle={cycle} demoEventIds={demoEventIds} legends={legends} />
       ) : (
-        <DayPreview eventIds={currentPlan.eventIds} ratings={ratings} qualifiers={qualifiers} cycle={cycle} demoEventIds={demoEventIds} />
+        <DayPreview eventIds={currentPlan.eventIds} ratings={ratings} qualifiers={qualifiers} cycle={cycle} demoEventIds={demoEventIds} legends={legends} />
       )}
 
       {/* Controls */}
@@ -120,9 +124,11 @@ interface PreviewProps {
   qualifiers: Qualifiers;
   cycle: Cycle;
   demoEventIds: Set<string>;
+  legends: Legend[];
 }
 
-function DayPreview({ eventIds, ratings, qualifiers, cycle, demoEventIds }: PreviewProps) {
+function DayPreview({ eventIds, ratings, qualifiers, cycle, demoEventIds, legends }: PreviewProps) {
+  const openLegend = useUIStore((s) => s.openLegend);
   if (eventIds.length === 0) {
     return (
       <div className={styles.preview}>
@@ -144,12 +150,27 @@ function DayPreview({ eventIds, ratings, qualifiers, cycle, demoEventIds }: Prev
             .sort((a, b) => b.r - a.r);
           const fav = ranked[0];
           const isDemo = demoEventIds.has(id);
+          const evLegends = legendsInEvent(id, legends);
           return (
-            <li key={id}>
+            <li key={id} className={evLegends.length > 0 ? styles.legendRow : ''}>
               <span className={styles.evName}>
                 <SportIcon id={sport.id} size={16} className={styles.evIcon} />
                 {isDemo && <span className={styles.demoTag}>DEMO</span>}
                 {event.name}
+                {evLegends.length > 0 && (
+                  <span className={styles.legendFlags}>
+                    {evLegends.map((lg) => (
+                      <button
+                        key={lg.id}
+                        className={`${styles.legendChip} ${styles[`r_${lg.rarity}`]}`}
+                        onClick={() => openLegend(lg.id)}
+                        title={`${lg.name} — ${lg.rarity}`}
+                      >
+                        ★ {lg.name}
+                      </button>
+                    ))}
+                  </span>
+                )}
               </span>
               <span className={styles.fav}>
                 Favorite: <Flag code={fav?.code ?? ''} size={18} className={styles.favFlag} />
@@ -170,9 +191,11 @@ interface ResultsProps {
   results: Record<string, EventResult>;
   cycle: Cycle;
   demoEventIds: Set<string>;
+  legends: Legend[];
 }
 
-function DayResults({ eventIds, results, cycle, demoEventIds }: ResultsProps) {
+function DayResults({ eventIds, results, cycle, demoEventIds, legends }: ResultsProps) {
+  const openLegend = useUIStore((s) => s.openLegend);
   return (
     <div>
       {eventIds.map((id) => {
@@ -182,8 +205,12 @@ function DayResults({ eventIds, results, cycle, demoEventIds }: ResultsProps) {
         if (!result || !event || !sport) return null;
         const isDemo = demoEventIds.has(id);
         const [gold, silver, bronze] = result.podium;
+        const evLegends = legendsInEvent(id, legends);
         return (
-          <div key={id} className={`${styles.eventCard} ${isDemo ? styles.demoCard : ''}`}>
+          <div
+            key={id}
+            className={`${styles.eventCard} ${isDemo ? styles.demoCard : ''} ${evLegends.length > 0 ? styles.legendCard : ''}`}
+          >
             <div className={styles.eventHead}>
               <div className={styles.eventName}>
                 <SportIcon id={sport.id} size={20} className={styles.eventHeadIcon} />
@@ -192,25 +219,49 @@ function DayResults({ eventIds, results, cycle, demoEventIds }: ResultsProps) {
               </div>
               <div className={styles.eventSport}>{sport.name}</div>
             </div>
+            {evLegends.length > 0 && (
+              <div className={styles.legendBanner}>
+                {evLegends.map((lg) => (
+                  <button
+                    key={lg.id}
+                    className={`${styles.legendChip} ${styles[`r_${lg.rarity}`]}`}
+                    onClick={() => openLegend(lg.id)}
+                  >
+                    ★ {lg.name} · {lg.country}
+                  </button>
+                ))}
+              </div>
+            )}
+            {result.upset && !isDemo && (
+              <div className={styles.upsetBanner}>
+                <span className={styles.upsetTag}>UPSET</span>
+                <span className={styles.upsetText}>
+                  Favorite <Flag code={result.favorite} size={16} className={styles.upsetFlag} />
+                  <strong>{result.favorite}</strong> denied — gold to{' '}
+                  <Flag code={gold.country} size={16} className={styles.upsetFlag} />
+                  <strong>{gold.country}</strong>
+                </span>
+              </div>
+            )}
             <div className={styles.podium}>
               <div className={`${styles.medal} ${styles.gold}`}>
                 <div className={styles.pos}>Gold</div>
                 <div className={styles.country}>
-                  <Flag code={gold.country} size={30} className={styles.podiumFlag} /> {gold.country}
+                  <NationChip code={gold.country} flagSize={26} />
                 </div>
                 <div className={styles.result}>{formatValue(event, gold.value)}</div>
               </div>
               <div className={`${styles.medal} ${styles.silver}`}>
                 <div className={styles.pos}>Silver</div>
                 <div className={styles.country}>
-                  <Flag code={silver.country} size={30} className={styles.podiumFlag} /> {silver.country}
+                  <NationChip code={silver.country} flagSize={26} />
                 </div>
                 <div className={styles.result}>{formatValue(event, silver.value)}</div>
               </div>
               <div className={`${styles.medal} ${styles.bronze}`}>
                 <div className={styles.pos}>Bronze</div>
                 <div className={styles.country}>
-                  <Flag code={bronze.country} size={30} className={styles.podiumFlag} /> {bronze.country}
+                  <NationChip code={bronze.country} flagSize={26} />
                 </div>
                 <div className={styles.result}>{formatValue(event, bronze.value)}</div>
               </div>

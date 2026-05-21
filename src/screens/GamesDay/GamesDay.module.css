@@ -300,3 +300,78 @@
   vertical-align: -2px;
   margin-right: 4px;
 }
+
+/* Upset banner */
+.upsetBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  background: var(--theme-primary);
+  color: #fff;
+}
+
+.upsetTag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 3px 8px;
+  background: #fff;
+  color: var(--theme-primary);
+  border-radius: 2px;
+}
+
+.upsetText {
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
+.upsetText strong {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  margin: 0 1px;
+}
+
+.upsetFlag {
+  margin: 0 3px 0 5px;
+}
+
+/* Legend integration */
+.legendRow {
+  background: rgba(201, 169, 97, 0.08);
+}
+
+.legendFlags {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.legendChip {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.r_rare { background: #5a7d9a; }
+.r_epic { background: #7d5a9a; }
+.r_legend { background: linear-gradient(90deg, #c9a961, #a87142); }
+
+.legendCard {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold);
+}
+
+.legendBanner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 20px;
+  background: rgba(201, 169, 97, 0.14);
+}

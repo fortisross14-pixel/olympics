@@ -3,13 +3,16 @@ import styles from './App.module.css';
 import { useCycleStore } from './store/cycleStore';
 import Start from './screens/Start/Start';
 import HostPicker from './screens/HostPicker/HostPicker';
+import Rankings from './screens/Rankings/Rankings';
 import Qualifiers from './screens/Qualifiers/Qualifiers';
 import GamesDay from './screens/GamesDay/GamesDay';
 import MedalTable from './screens/MedalTable/MedalTable';
 import History from './screens/History/History';
 import Flame from './components/Flame/Flame';
+import NationModal from './components/NationModal/NationModal';
+import LegendModal from './components/LegendModal/LegendModal';
 
-export type TabId = 'start' | 'host' | 'qualify' | 'sim' | 'table' | 'history';
+export type TabId = 'start' | 'host' | 'rankings' | 'qualify' | 'sim' | 'table' | 'history';
 
 interface Tab {
   id: TabId;
@@ -19,13 +22,13 @@ interface Tab {
 const TABS: Tab[] = [
   { id: 'start', label: 'Cycle' },
   { id: 'host', label: 'Host City' },
+  { id: 'rankings', label: 'Rankings' },
   { id: 'qualify', label: 'Qualifiers' },
   { id: 'sim', label: 'The Games' },
   { id: 'table', label: 'Medal Table' },
   { id: 'history', label: 'History' },
 ];
 
-/** Convert "#RRGGBB" → "R, G, B" for use inside rgba(...) */
 function hexToRgbTuple(hex: string): string {
   const m = hex.replace('#', '').match(/.{2}/g);
   if (!m) return '0,0,0';
@@ -41,8 +44,8 @@ export default function App() {
   const inCycle = !!currentCycle;
   const hasHistory = history.length > 0;
   const hostCity = currentCycle?.hostCity;
+  const qualified = stage === 'qualified' || stage === 'racing' || stage === 'complete';
 
-  // Apply host theme to :root whenever it changes
   useEffect(() => {
     const root = document.documentElement;
     if (hostCity) {
@@ -52,7 +55,6 @@ export default function App() {
       root.style.setProperty('--theme-primary-soft', `rgba(${rgb}, 0.08)`);
       root.style.setProperty('--theme-primary-rgb', rgb);
     } else {
-      // Reset to defaults
       root.style.removeProperty('--theme-primary');
       root.style.removeProperty('--theme-secondary');
       root.style.removeProperty('--theme-primary-soft');
@@ -60,23 +62,21 @@ export default function App() {
     }
   }, [hostCity]);
 
-  // Tab gating
   const enabled: Record<TabId, boolean> = {
     start: true,
     host: inCycle,
-    qualify: inCycle && (stage === 'qualified' || stage === 'racing' || stage === 'complete'),
-    sim: inCycle && (stage === 'qualified' || stage === 'racing' || stage === 'complete'),
-    table: inCycle && (stage === 'qualified' || stage === 'racing' || stage === 'complete'),
+    rankings: inCycle && qualified,
+    qualify: inCycle && qualified,
+    sim: inCycle && qualified,
+    table: inCycle && qualified,
     history: hasHistory,
   };
 
-  // Auto-advance the user along the cycle stages
   useEffect(() => {
     if (stage === 'host' && active === 'start') setActive('host');
-    if (stage === 'qualified' && active === 'host') setActive('qualify');
+    if (stage === 'qualified' && active === 'host') setActive('rankings');
   }, [stage, active]);
 
-  // If user is on a tab that becomes disabled (e.g. after archiving), bounce them
   useEffect(() => {
     if (!enabled[active]) setActive('start');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -123,11 +123,15 @@ export default function App() {
       <main>
         {active === 'start' && <Start />}
         {active === 'host' && <HostPicker />}
+        {active === 'rankings' && <Rankings />}
         {active === 'qualify' && <Qualifiers />}
         {active === 'sim' && <GamesDay />}
         {active === 'table' && <MedalTable />}
         {active === 'history' && <History />}
       </main>
+
+      <NationModal />
+      <LegendModal />
     </div>
   );
 }

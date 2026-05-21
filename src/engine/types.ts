@@ -29,6 +29,8 @@ export type EventUnit =
   | 'time'   // hh:mm:ss formatted string (lower better, e.g. marathon)
   | 'rank';  // no numeric result, just placement (judo, team sports)
 
+export type EventGender = 'M' | 'W' | 'mixed';
+
 export interface SportEvent {
   id: string;
   name: string;
@@ -108,6 +110,10 @@ export interface EventResult {
   eventId: string;
   cycleYear: CycleYear;
   podium: [PodiumPlace, PodiumPlace, PodiumPlace];
+  /** Country that had the highest rating going in (the pre-race favorite) */
+  favorite: CountryCode;
+  /** True when the gold medalist was NOT the favorite */
+  upset: boolean;
 }
 
 export interface MedalCount {
@@ -144,6 +150,41 @@ export interface Cycle {
   demoMedals: MedalTable;
   /** Sport IDs that are demonstration sports this cycle */
   demoSportIds: string[];
+}
+
+// --- Legends ---
+
+export type LegendRarity = 'rare' | 'epic' | 'legend';
+
+export type LegendGender = 'M' | 'W';
+
+/** A legend's medal tally — accumulated across their career. */
+export interface LegendMedals {
+  gold: number;
+  silver: number;
+  bronze: number;
+}
+
+export interface Legend {
+  id: string;
+  name: string;
+  country: CountryCode;
+  sportId: string;
+  gender: LegendGender;
+  rarity: LegendRarity;
+  /** Total Olympic cycles this legend will compete in (2-5) */
+  careerLength: number;
+  /** Cycles completed so far */
+  gamesPlayed: number;
+  /** True once gamesPlayed >= careerLength */
+  retired: boolean;
+  /** Career medal tally (accumulates across cycles) */
+  medals: LegendMedals;
+  /**
+   * Event IDs this legend is assigned to in the CURRENT cycle.
+   * Reassigned each cycle. Empty when between cycles or retired.
+   */
+  currentEventIds: string[];
 }
 
 // --- History (stub for iteration 7+, defined now to lock the shape) ---

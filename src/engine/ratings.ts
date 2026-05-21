@@ -71,12 +71,16 @@ function distributeBudget(remainingBudget: number, slotCount: number): number[] 
  * @param demoSportIds  IDs of sports that are demonstration sports this cycle
  * @param hostCountryCode  Host country (gets +0.7 across non-demo sports;
  *                          and rating 3 in demo sports). Null = no boost.
+ * @param legendBoosts  Map of `${country}:${sportId}` → { boost, cap }.
+ *                       Applied last; boosts a country's sport rating and
+ *                       allows it to exceed 5 (up to the rarity cap of 6).
  */
 export function generateRatings(
   countries: readonly Country[],
   sports: readonly Sport[],
   demoSportIds: ReadonlySet<string>,
   hostCountryCode: CountryCode | null = null,
+  legendBoosts: ReadonlyMap<string, { boost: number; cap: number }> = new Map(),
 ): Ratings {
   const ratings: Ratings = {};
   const coreSports = sports.filter((s) => !demoSportIds.has(s.id));
@@ -95,7 +99,6 @@ export function generateRatings(
 
     // Apply specialty ratings
     for (const sportId of specialties) {
-      // Only count specialty if the sport actually exists this cycle
       if (coreSports.some((s) => s.id === sportId)) {
         ratings[c.code][sportId] = RATING_CEILING;
       }
@@ -103,8 +106,6 @@ export function generateRatings(
 
     // Non-specialty core sports — get budget-distributed ratings
     const nonSpecialty = coreSports.filter((s) => !specialties.includes(s.id));
-    // Floor every slot so remaining budget = points above floor
-    // Constraint: remainingBudget must be >= slotCount (so each gets at least 1)
     const minNeeded = nonSpecialty.length * RATING_FLOOR;
     if (remainingBudget < minNeeded) remainingBudget = minNeeded;
     const distributed = distributeBudget(remainingBudget, nonSpecialty.length);
@@ -125,6 +126,18 @@ export function generateRatings(
     for (const sportId of demoSportIds) {
       ratings[c.code][sportId] =
         c.code === hostCountryCode ? DEMO_HOST_RATING : DEMO_OTHER_RATING;
+    }
+
+    // Legend boosts — applied last. Can push a rating above 5 (cap 6).
+    for (const sport of coreSports) {
+      const key = `${c.code}:${sport.id}`;
+      const lb = legendBoosts.get(key);
+      if (lb) {
+        const base = ratings[c.code][sport.id] ?? 1;
+        ratings[c.code][sport.id] = round1(
+          clamp(base + lb.boost, 1, lb.cap),
+        );
+      }
     }
   }
 

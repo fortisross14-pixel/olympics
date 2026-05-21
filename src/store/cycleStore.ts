@@ -5,6 +5,7 @@ import type {
   CompletedCycle,
   Cycle,
   CycleYear,
+  Legend,
   Sport,
   SportEvent,
 } from '../engine/types';
@@ -15,11 +16,17 @@ import { generateRatings } from '../engine/ratings';
 import { generateQualifiers } from '../engine/qualifying';
 import { generateSchedule } from '../engine/scheduling';
 import { simulateDay as engineSimulateDay } from '../engine/simulation';
+import {
+  refreshLegendsForCycle,
+  ageLegends,
+  legendBoostMap,
+  legendsInEvent,
+} from '../engine/legends';
 import { pickRandom } from '../engine/random';
 
 /** Bump this if the persisted shape ever changes incompatibly. */
-const STORAGE_VERSION = 2;
-const STORAGE_KEY = 'the-cycle:v2';
+const STORAGE_VERSION = 4;
+const STORAGE_KEY = 'the-cycle:v4';
 
 const FIRST_CYCLE_YEAR = 2028;
 const YEARS_BETWEEN_CYCLES = 4;
@@ -28,6 +35,8 @@ interface CycleStore {
   currentCycle: Cycle | null;
   hostCandidates: City[];
   history: CompletedCycle[];
+  /** All legends, active and retired — persists across cycles. */
+  legends: Legend[];
 
   startCycle: () => void;
   selectHost: (city: City) => void;
@@ -75,10 +84,6 @@ function nextCycleYear(history: readonly CompletedCycle[]): CycleYear {
   return history[history.length - 1].year + YEARS_BETWEEN_CYCLES;
 }
 
-/**
- * Combine core sports with the host's demonstration sports for the cycle.
- * Returns the unified sport list and the flat event list.
- */
 function buildSportsForCycle(city: City): {
   sports: Sport[];
   events: SportEvent[];
@@ -97,6 +102,7 @@ export const useCycleStore = create<CycleStore>()(
       currentCycle: null,
       hostCandidates: [],
       history: [],
+      legends: [],
 
       startCycle: () => {
         set((state) => {
@@ -113,11 +119,25 @@ export const useCycleStore = create<CycleStore>()(
           if (!state.currentCycle) return state;
 
           const { sports, events, demoSportIds } = buildSportsForCycle(city);
-          const ratings = generateRatings(COUNTRIES, sports, demoSportIds, city.countryCode);
+
+          // Refresh legends for this cycle: retire the done, spawn new,
+          // and assign event slots. Core sports only (no demo legends).
+          const legends = refreshLegendsForCycle(state.legends, SPORTS);
+
+          // Legend boosts feed into rating generation
+          const boosts = legendBoostMap(legends);
+          const ratings = generateRatings(
+            COUNTRIES,
+            sports,
+            demoSportIds,
+            city.countryCode,
+            boosts,
+          );
           const qualifiers = generateQualifiers(COUNTRIES, sports, ratings);
           const schedule = generateSchedule(events);
 
           return {
+            legends,
             currentCycle: {
               ...state.currentCycle,
               stage: 'qualified',
@@ -155,7 +175,6 @@ export const useCycleStore = create<CycleStore>()(
             cycle.year,
           );
 
-          // Demo events go to demoMedals, official events to medals.
           const demoEventIds = new Set<string>();
           for (const sport of cycle.hostCity.demonstrationSports ?? []) {
             for (const e of sport.events) demoEventIds.add(e.id);
@@ -164,6 +183,12 @@ export const useCycleStore = create<CycleStore>()(
           const results = { ...cycle.results, ...newResults };
           const medals = { ...cycle.medals };
           const demoMedals = { ...cycle.demoMedals };
+
+          // Clone legends so we can credit medals
+          const legends = state.legends.map((l) => ({
+            ...l,
+            medals: { ...l.medals },
+          }));
 
           for (const eventId of Object.keys(newResults)) {
             const podium = newResults[eventId].podium;
@@ -180,6 +205,16 @@ export const useCycleStore = create<CycleStore>()(
               ...targetTable[podium[2].country],
               bronze: targetTable[podium[2].country].bronze + 1,
             };
+
+            // Credit legends competing in this event whose country medaled
+            if (!demoEventIds.has(eventId)) {
+              const competing = legendsInEvent(eventId, legends);
+              for (const lg of competing) {
+                if (lg.country === podium[0].country) lg.medals.gold++;
+                else if (lg.country === podium[1].country) lg.medals.silver++;
+                else if (lg.country === podium[2].country) lg.medals.bronze++;
+              }
+            }
           }
 
           const daysSimulated = [...cycle.daysSimulated, day];
@@ -187,6 +222,7 @@ export const useCycleStore = create<CycleStore>()(
           const stage = daysSimulated.length >= totalDays ? 'complete' : 'racing';
 
           return {
+            legends,
             currentCycle: {
               ...cycle,
               stage,
@@ -233,7 +269,11 @@ export const useCycleStore = create<CycleStore>()(
             demoSportIds: cycle.demoSportIds,
             results: cycle.results,
           };
+          // Age legends — those who hit their career length retire
+          // at the next cycle's refresh.
+          const legends = ageLegends(state.legends);
           return {
+            legends,
             history: [...state.history, archived],
             currentCycle: null,
             hostCandidates: [],
@@ -246,7 +286,12 @@ export const useCycleStore = create<CycleStore>()(
       },
 
       wipeAllData: () => {
-        set({ currentCycle: null, hostCandidates: [], history: [] });
+        set({
+          currentCycle: null,
+          hostCandidates: [],
+          history: [],
+          legends: [],
+        });
       },
     }),
     {
@@ -256,6 +301,7 @@ export const useCycleStore = create<CycleStore>()(
       partialize: (state) => ({
         currentCycle: state.currentCycle,
         history: state.history,
+        legends: state.legends,
       }),
     },
   ),

@@ -48,7 +48,9 @@ One-time GitHub setup: **Settings → Pages → Source = GitHub Actions**
 - [x] **Iteration 7** — 15-day calendar, day slicer, host themes, Paris-style visual pivot, persistence, multi-cycle history
 - [x] **Iteration 8a** — Balancing: budget-based ratings, hard-coded specialties, host bonus +0.7, variance tuned for ~60% favorite-win, demonstration sports (host-exclusive, separate medal table)
 - [x] **Iteration 8b** — Sport icons (hand-drawn pictograms) + country flags (Unicode emoji)
-- [ ] Iteration 9 — Wire legends into simulation engine
+- [x] **Iteration 9a** — Nation Rankings screen, clickable nation popup, medal-table sport + gender filters, centered medal columns, upset tags, SVG flags (Chrome-safe)
+- [x] **Iteration 9b** — Full legend system: 8-12 legends with culture-matched names, rarity boosts wired into ratings, gender/event assignment, retirement churn, Legends sub-tab, legend popup, calendar integration
+
 - [ ] Iteration 10 — Polish: cinematic reveals, sound
 
 ## What works right now (after iteration 8b)

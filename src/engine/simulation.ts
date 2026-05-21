@@ -114,10 +114,28 @@ export function simulateEvent(
     } satisfies PodiumPlace;
   });
 
+  // The pre-race favorite = highest-rated qualifier (ties broken by order)
+  let favorite = qualifiers[0];
+  let bestRating = -Infinity;
+  for (const code of qualifiers) {
+    const r = ratings[code]?.[sportId] ?? 0;
+    if (r > bestRating) {
+      bestRating = r;
+      favorite = code;
+    }
+  }
+  // It's a genuine upset only when the winner's rating is strictly
+  // below the top rating in the field. A win between equally-rated
+  // countries is not an upset.
+  const winnerRating = ratings[podium[0].country]?.[sportId] ?? 0;
+  const upset = winnerRating < bestRating;
+
   return {
     eventId: event.id,
     cycleYear,
     podium: podium as [PodiumPlace, PodiumPlace, PodiumPlace],
+    favorite,
+    upset,
   };
 }
 
