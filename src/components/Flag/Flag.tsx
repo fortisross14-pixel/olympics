@@ -177,8 +177,12 @@ const FLAGS: Record<string, () => React.ReactNode> = {
 };
 
 export default function Flag({ code, size = 20, className }: Props) {
-  const draw = FLAGS[code];
-  if (!draw) return null;
+  const draw = FLAGS[code] || (() => (<>
+      <rect width="30" height="20" fill="#f4f0e6" />
+      <rect width="30" height="6.67" fill="#2f5268" />
+      <rect y="13.33" width="30" height="6.67" fill="#b78635" />
+      <text x="15" y="12.6" fontSize="5.2" fontWeight="700" fill="#172630" textAnchor="middle">{code}</text>
+    </>));
   return (
     <svg
       width={size}
