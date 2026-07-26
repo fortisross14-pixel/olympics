@@ -38,3 +38,56 @@
 .actionRow .primary{margin-top:0}
 
 @media(max-width:800px){.slotGrid{grid-template-columns:1fr}.slotHero{padding:52px 24px}.slotSection{padding:38px 18px}.slotCard{min-height:270px}.modalTitle{align-items:flex-start}.modalTitle h2{font-size:36px}}
+
+/* v8 tables, profiles and athlete filters */
+.filters{display:flex;gap:14px;align-items:end;flex-wrap:wrap;margin:18px 0 24px}
+.filters label{display:flex;flex-direction:column;gap:7px;font-size:9px;font-weight:800;letter-spacing:1.5px;color:#8a6b35}
+.filters select{min-width:180px;border:1px solid #cfc6b7;background:#fff;padding:11px 35px 11px 12px;color:#172630}
+.tableScroll{width:100%;overflow-x:auto;border:1px solid #ddd5c7;background:#fff}
+.dataTable{min-width:760px;background:#fff}
+.dataTable>div,.dataTable>button{width:100%;display:grid;grid-template-columns:minmax(270px,1.7fr) repeat(6,minmax(72px,.45fr));align-items:center;border:0;border-bottom:1px solid #e7e0d4;background:#fff;padding:0;text-align:left;color:#172630}
+.dataTable>button{cursor:pointer}
+.dataTable>button:hover{background:#f4eddd}
+.dataTable>div>span,.dataTable>button>span{display:flex;align-items:center;gap:10px;padding:13px 16px}
+.dataTable>div>span>span,.dataTable>button>span>span{display:flex;flex-direction:column;gap:3px}
+.dataTable small{font-size:9px;color:#77818a;letter-spacing:.5px}
+.dataTable em,.dataTable>div>b,.dataTable>button>b{font-style:normal;text-align:center;padding:13px 8px}
+.dataTable em{font-family:Georgia,serif;font-size:17px}
+.tableHead{position:sticky;top:0;z-index:2;background:#172630!important;color:#fff!important}
+.tableHead span,.tableHead b{font:800 9px/1 Arial!important;letter-spacing:1.2px;text-transform:uppercase;padding:13px 12px!important}
+.athleteCard{appearance:none;text-align:left;color:inherit;cursor:pointer}
+.athleteCard:hover{transform:translateY(-2px);box-shadow:0 14px 30px #17263012}
+
+.attemptTable{width:100%;overflow-x:auto;border:1px solid #d8d0c1;background:#fff}
+.attemptTable>div{min-width:760px;display:grid;grid-template-columns:minmax(220px,1.4fr) repeat(6,minmax(74px,.55fr)) minmax(80px,.55fr);align-items:center;border-bottom:1px solid #e4ddd1}
+.attemptTable>div>span{display:flex;align-items:center;gap:8px;padding:12px 14px;white-space:nowrap}
+.attemptTable em,.attemptTable strong,.attemptTable .attemptHead b{text-align:center;padding:11px 8px;font-style:normal;white-space:nowrap}
+.attemptHead{background:#172630!important;color:#fff;font-size:9px;letter-spacing:1px;text-transform:uppercase}
+.attemptHead span{font-weight:800}
+.tableLeader{background:#f1e4c5!important;box-shadow:inset 5px 0 #b7873d}
+
+.profileModal{width:min(960px,100%)}
+.profileHeader{display:flex;align-items:center;gap:18px;padding-right:34px}
+.profileHeader h2{margin:3px 0 4px}
+.profileHeader p{margin:0;color:#69747d}
+.profileStats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:24px 0}
+.profileStats span{background:#eee8db;padding:13px;font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:#6e665d}
+.profileStats b{display:block;font:500 27px Georgia,serif;color:#172630;margin-bottom:4px}
+.profileSection{margin-top:27px}
+.profileSection h3{font:500 27px Georgia,serif;margin:0 0 12px}
+.eventChips{display:flex;flex-wrap:wrap;gap:8px}
+.eventChips span{background:#fff;border:1px solid #d9d1c3;padding:9px 11px;font-size:11px}
+.profileHistory{display:grid;gap:10px}
+.profileHistory article{border-left:4px solid #b7873d;background:#fff;padding:15px}
+.profileHistory article>div{display:flex;justify-content:space-between;gap:12px}
+.profileHistory article>div span{color:#737d85;font-size:11px}
+.profileHistory article>strong{display:block;margin:8px 0;color:#9c6d29}
+.profileHistory p{display:grid;grid-template-columns:70px 1fr;gap:8px;margin:7px 0;font-size:12px}
+.profileHistory p span{font-size:9px;font-weight:800;letter-spacing:1px}
+.countryHistoryTable>div{grid-template-columns:minmax(210px,1.4fr) repeat(5,minmax(95px,.6fr))}
+
+@media(max-width:700px){
+  .profileStats{grid-template-columns:repeat(2,1fr)}
+  .profileHeader{align-items:flex-start}
+  .dataTable>div,.dataTable>button{grid-template-columns:minmax(230px,1.5fr) repeat(6,70px)}
+}

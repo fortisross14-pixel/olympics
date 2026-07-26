@@ -32,6 +32,7 @@ type Athlete = {
   gender: Gender;
   sport: string;
   event: string;
+  events: string[];
   born: number;
   overall: number;
   potential: number;
@@ -76,7 +77,14 @@ type Qualification = {
   news: string[];
 };
 
-type Archive = { year: number; host: string; champion: string; memory: string };
+type Archive = {
+  year: number;
+  host: string;
+  champion: string;
+  memory: string;
+  qualificationCounts: Record<string, number>;
+  medals: Record<string, { gold: number; silver: number; bronze: number }>;
+};
 type Appearance = { year:number; athleteId:string; name:string; country:string; sport:string; event:string };
 type LedgerResult = {
   year: number;
@@ -138,7 +146,7 @@ type WatchPayload =
   | { type: 'race'; checkpoints: { label: string; values: number[]; finished: boolean }[] }
   | { type: 'field'; attempts: (number | null)[][]; unit: string }
   | { type: 'vertical'; heights: number[]; attempts: ('O' | 'X' | '—')[][] }
-  | { type: 'judged'; rounds: number[][] }
+  | { type: 'judged'; rounds: number[][]; labels: string[]; cumulative: boolean }
   | { type: 'fencing'; bouts: { stage: string; left: number; right: number; leftId: string; rightId: string; winnerId: string }[] }
   | { type: 'weightlifting'; lifts: { phase: string; weight: number; success: boolean }[][] }
   | { type: 'shooting'; rounds: number[][]; cumulative: boolean; unit: string }
@@ -196,18 +204,49 @@ const templatesFor = (y:number) => TEMPLATES.filter(x=>x.from<=y);
 
 function makeAthlete(year:number,t:Template,i:number):Athlete {
   const country=pick(countryPool(year));
-  return {id:`a-${year}-${t.name}-${i}-${Math.random()}`,name:randomAthleteName(country,t.gender),country,gender:t.gender,sport:t.sport,event:t.name,born:year-(18+rand(15)),overall:67+rand(28),potential:78+rand(21),form:68+rand(29),trait:pick(TRAITS),gold:0,silver:0,bronze:0,retired:false};
+  return {id:`a-${year}-${t.name}-${i}-${Math.random()}`,name:randomAthleteName(country,t.gender),country,gender:t.gender,sport:t.sport,event:t.name,events:[t.name],born:year-(18+rand(15)),overall:67+rand(28),potential:78+rand(21),form:68+rand(29),trait:pick(TRAITS),gold:0,silver:0,bronze:0,retired:false};
 }
-function createAthletes(y:number){return templatesFor(y).flatMap(t=>Array.from({length:6},(_,i)=>makeAthlete(y,t,i)))}
+function createAthletes(y:number){
+  const athletes:Athlete[]=[];
+  for(const t of templatesFor(y)){
+    const reusable=athletes.filter(a=>a.sport===t.sport&&a.gender===t.gender&&!a.retired&&(a.events||[a.event]).length<4);
+    const multiEventCount=['Athletics','Swimming','Gymnastics','Cycling','Shooting'].includes(t.sport)?Math.min(2,reusable.length):0;
+    const shared=[...reusable].sort((a,b)=>b.overall-a.overall).slice(0,multiEventCount);
+    shared.forEach(a=>{const events=a.events||[a.event];if(!events.includes(t.name))events.push(t.name);a.events=events});
+    for(let i=shared.length;i<6;i++)athletes.push(makeAthlete(y,t,i));
+  }
+  return athletes;
+}
 function score(a:Athlete,y:number){const ageFactor=age(a,y)<22?-2:age(a,y)>34?-3:0;return a.overall*.7+a.form*.3+ageFactor+(Math.random()*12-6)}
-function field(t:Template,athletes:Athlete[],y:number){const found=athletes.filter(a=>!a.retired&&a.event===t.name&&a.gender===t.gender);return [...found].sort((a,b)=>score(b,y)-score(a,y)).slice(0,t.format==='team'?2:6)}
-function narrative(f:Athlete[],y:number){const top=[...f].sort((a,b)=>b.overall-a.overall);if(top.length<2)return 'A new Olympic champion will be crowned.';const gap=top[0].overall-top[2]?.overall;if(top[0].gold>=4)return `History can be made. ${top[0].name} will attempt to claim a fifth Olympic gold.`;if(age(top[0],y)<=21)return `Can the young promise start with gold? At only ${age(top[0],y)}, ${top[0].name} is chasing a first Olympic title.`;if(age(top[0],y)>=34)return `${top[0].name} enters what may be a final Olympic appearance with one last chance at glory.`;if(gap<4)return `An extremely competitive final is expected: ${top.slice(0,3).map(a=>a.name).join(', ')} are separated by almost nothing.`;return `${top[0].name} enters as the favorite, but Olympic finals have a habit of rewriting expectations.`}
-function makeEvents(y:number,athletes:Athlete[]){const items=templatesFor(y).map((t,i)=>{const f=field(t,athletes,y);const gap=(f[0]?.overall||0)-(f[1]?.overall||0);const drama=(gap<3?5:0)+(f.some(a=>a.gold>1)?4:0)+(f.some(a=>age(a,y)>33)?3:0)+Math.random()*4;return{t,i,f,drama}});const target=Math.min(12,Math.max(8,Math.round(items.length*.15)));const star=new Set([...items].sort((a,b)=>b.drama-a.drama).slice(0,target).map(x=>x.i));return items.map(({t,i,f,drama})=>({id:`e-${y}-${i}`,day:1+(i%12),sport:t.sport,name:t.name,gender:t.gender,format:t.format,star:star.has(i),stars:star.has(i)?Math.min(6,3+Math.floor(drama/3)):1,hook:narrative(f,y),contenders:f.map(a=>a.id),resolved:false,results:[]} as FinalEvent))}
+function field(t:Template,athletes:Athlete[],y:number){const found=athletes.filter(a=>!a.retired&&(a.events||[a.event]).includes(t.name)&&a.gender===t.gender);return [...found].sort((a,b)=>score(b,y)-score(a,y)).slice(0,t.format==='team'?2:6)}
+function narrative(f:Athlete[],y:number,eventName?:string){
+  const top=[...f].sort((a,b)=>b.overall-a.overall);
+  const contest=eventName?` in ${eventName}`:'';
+  if(top.length<2)return `A new Olympic champion will be crowned${contest}.`;
+  const gap=top[0].overall-(top[2]?.overall??top[1].overall);
+  const multi=top.find(a=>(a.events||[a.event]).length>1);
+  if(top[0].gold>=4)return `History is within reach${contest}. ${top[0].name} is chasing a fifth Olympic gold, a mark reserved for the greatest careers.`;
+  if(age(top[0],y)<=21)return `A new era could begin${contest}. At only ${age(top[0],y)}, ${top[0].name} enters a first Olympic final with gold already within reach.`;
+  if(age(top[0],y)>=34)return `One last challenge${contest}. Veteran ${top[0].name} may be making a final Olympic appearance.`;
+  if(gap<4)return `No clear favorite${contest}: ${top.slice(0,3).map(a=>a.name).join(', ')} arrive separated by almost nothing.`;
+  if(multi)return `${top[0].name} is favored${contest}, but fatigue may matter: ${multi.name} is contesting ${multi.events.length} events at these Games.`;
+  return `${top[0].name} carries the favorite's burden${contest}, with ${top[1].name} waiting for any mistake.`;
+}
+function makeEvents(y:number,athletes:Athlete[]){const items=templatesFor(y).map((t,i)=>{const f=field(t,athletes,y);const gap=(f[0]?.overall||0)-(f[1]?.overall||0);const drama=(gap<3?5:0)+(f.some(a=>a.gold>1)?4:0)+(f.some(a=>age(a,y)>33)?3:0)+Math.random()*4;return{t,i,f,drama}});const target=Math.min(12,Math.max(8,Math.round(items.length*.15)));const star=new Set([...items].sort((a,b)=>b.drama-a.drama).slice(0,target).map(x=>x.i));return items.map(({t,i,f,drama})=>({id:`e-${y}-${i}`,day:1+(i%12),sport:t.sport,name:t.name,gender:t.gender,format:t.format,star:star.has(i),stars:star.has(i)?Math.min(6,3+Math.floor(drama/3)):1,hook:narrative(f,y,t.name),contenders:f.map(a=>a.id),resolved:false,results:[]} as FinalEvent))}
 
 function eraFactor(y:number){return clamp((y-1896)/140,0,1)}
 function raceBase(name:string,y:number){const e=eraFactor(y);if(name.includes('100m'))return 12.2-2.35*e;if(name.includes('200m'))return 25.0-5.6*e;if(name.includes('400m'))return 56-12.5*e;if(name.includes('800m'))return 132-31*e;if(name.includes('1500m'))return 270-55*e;if(name.includes('5000m'))return 980-220*e;if(name.includes('10000m'))return 2100-500*e;if(name.includes('Marathon'))return 10800-3300*e;if(name.includes('Hurdles'))return 18.0-5.2*e;if(name.includes('Freestyle'))return name.includes('1500m')?1500-650*e:name.includes('400m')?380-170*e:name.includes('200m')?180-80*e:82-35*e;if(name.includes('Backstroke'))return name.includes('200m')?210-90*e:100-44*e;if(name.includes('Breaststroke'))return 220-95*e;if(name.includes('Road Race'))return 9000-1200*e;if(name.includes('Track Sprint'))return 17-7*e;if(name.includes('10km'))return 1200-300*e;if(name.includes('Sculls'))return 510-110*e;if(name.includes('Pairs'))return 500-100*e;if(name.includes('Fours'))return 450-95*e;if(name.includes('Eights'))return 420-90*e;return 100-20*e}
 function formatTime(seconds:number){if(seconds>=3600){const h=Math.floor(seconds/3600),m=Math.floor(seconds%3600/60),s=(seconds%60).toFixed(1).padStart(4,'0');return `${h}:${String(m).padStart(2,'0')}:${s}`}if(seconds>=60){const m=Math.floor(seconds/60),s=(seconds%60).toFixed(2).padStart(5,'0');return `${m}:${s}`}return `${seconds.toFixed(2)}s`}
-function resultMark(e:FinalEvent,a:Athlete,y:number,rank:number){const quality=(a.overall+a.form)/2;const eF=eraFactor(y);switch(e.format){case'race':{const base=raceBase(e.name,y);const value=base*(1-(quality-80)/330)+rank*(base*.004)+Math.random()*base*.004;return{value,mark:formatTime(value)}}case'field':{let base=e.name.includes('Long Jump')?6.15+2.8*eF:e.name.includes('Triple')?13+5*eF:e.name.includes('Shot')?13+10*eF:e.name.includes('Discus')?38+35*eF:e.name.includes('Hammer')?42+40*eF:44+50*eF;const value=base+(quality-80)*.08-rank*.18+Math.random()*.12;return{value,mark:`${value.toFixed(2)}m`}}case'vertical':{const pole=e.name.includes('Pole');const base=pole?3.1+3.1*eF:1.72+.75*eF;const value=base+(quality-80)*(pole?.025:.009)-rank*(pole?.04:.02);return{value,mark:`${value.toFixed(2)}m`}}case'judged':{const value=clamp(70+(quality-70)*.85-rank*.8+Math.random(),50,99.9);return{value,mark:value.toFixed(2)}}case'fencing':return{value:15-rank,mark:rank===0?'15 touches':'Finalist'};case'weightlifting':{const base=e.name.includes('Heavy')?260:205;const value=base+(quality-75)*3.1-rank*5+Math.random()*2;return{value,mark:`${Math.round(value)}kg total`}}case'shootingPrecision':{const value=clamp(585+(quality-75)*1.35-rank*1.1+Math.random(),500,654);return{value,mark:value.toFixed(y>=1988?1:0)}}case'shootingClay':{const value=clamp(Math.round(42+(quality-70)*.5-rank),25,50);return{value,mark:`${value}/50`}}case'archery':{const value=clamp(600+(quality-70)*2.1-rank*3+Math.random()*2,450,720);return{value,mark:`${Math.round(value)} pts`}}case'combat':return{value:10-rank,mark:rank===0?'Final victory':'Medalist'};case'team':return{value:100-rank,mark:rank===0?'Champions':'Finalists'};case'golf':{const value=Math.round(292-(quality-75)*.7+rank*2);return{value,mark:`${value} strokes`}}case'sailing':{const value=8+rank*5+rand(3);return{value,mark:`${value} pts`}}}}
+function resultMark(e:FinalEvent,a:Athlete,y:number,rank:number){const quality=(a.overall+a.form)/2;const eF=eraFactor(y);switch(e.format){case'race':{const base=raceBase(e.name,y);const value=base*(1-(quality-80)/330)+rank*(base*.004)+Math.random()*base*.004;return{value,mark:formatTime(value)}}case'field':{let base=e.name.includes('Long Jump')?6.15+2.8*eF:e.name.includes('Triple')?13+5*eF:e.name.includes('Shot')?13+10*eF:e.name.includes('Discus')?38+35*eF:e.name.includes('Hammer')?42+40*eF:44+50*eF;const value=base+(quality-80)*.08-rank*.18+Math.random()*.12;return{value,mark:`${value.toFixed(2)}m`}}case'vertical':{const pole=e.name.includes('Pole');const base=pole?3.1+3.1*eF:1.72+.75*eF;const value=base+(quality-80)*(pole?.025:.009)-rank*(pole?.04:.02);return{value,mark:`${value.toFixed(2)}m`}}case'judged':{
+  const allAround=e.sport==='Gymnastics'&&e.name.includes('All-Around');
+  const apparatus=e.sport==='Gymnastics'&&!allAround;
+  const value=apparatus
+    ?clamp(8.2+(quality-65)*.19-rank*.18+Math.random()*.12,7,16)
+    :allAround
+      ?clamp(48+(quality-65)*1.35-rank*1.1+Math.random()*.3,40,96)
+      :clamp(58+(quality-65)*1.25-rank*.9+Math.random()*.3,45,100);
+  return{value,mark:value.toFixed(2)}
+}case'fencing':return{value:15-rank,mark:rank===0?'15 touches':'Finalist'};case'weightlifting':{const base=e.name.includes('Heavy')?260:205;const value=base+(quality-75)*3.1-rank*5+Math.random()*2;return{value,mark:`${Math.round(value)}kg total`}}case'shootingPrecision':{const value=clamp(585+(quality-75)*1.35-rank*1.1+Math.random(),500,654);return{value,mark:value.toFixed(y>=1988?1:0)}}case'shootingClay':{const value=clamp(Math.round(42+(quality-70)*.5-rank),25,50);return{value,mark:`${value}/50`}}case'archery':{const value=clamp(600+(quality-70)*2.1-rank*3+Math.random()*2,450,720);return{value,mark:`${Math.round(value)} pts`}}case'combat':return{value:10-rank,mark:rank===0?'Final victory':'Medalist'};case'team':return{value:100-rank,mark:rank===0?'Champions':'Finalists'};case'golf':{const value=Math.round(292-(quality-75)*.7+rank*2);return{value,mark:`${value} strokes`}}case'sailing':{const value=8+rank*5+rand(3);return{value,mark:`${value} pts`}}}}
 
 function generateWatch(e:FinalEvent,ordered:Athlete[],results:Result[]):WatchPayload {
   if(e.format==='race'){
@@ -235,11 +274,30 @@ function generateWatch(e:FinalEvent,ordered:Athlete[],results:Result[]):WatchPay
     return{type:'vertical',heights,attempts};
   }
   if(e.format==='judged'){
-    const count=e.sport==='Gymnastics'&&e.name.includes('All-Around')?6:4;
-    const winning=results[0]?.value||85;
-    const totals=ordered.map((a,i)=>results.find(r=>r.athleteId===a.id)?.value??Math.max(45,winning-(i*1.4+1)));
-    const rounds=Array.from({length:count},(_,ri)=>ordered.map((_,i)=>clamp(totals[i]/count+(Math.random()*.65-.325)+(ri===count-1&&i===0?.15:0),6,16)));
-    return{type:'judged',rounds};
+    const allAround=e.sport==='Gymnastics'&&e.name.includes('All-Around');
+    const apparatus=e.sport==='Gymnastics'&&!allAround;
+    const labels=allAround
+      ?['Floor','Pommel','Rings','Vault','Bars','Horizontal']
+      :apparatus
+        ?['Final routine']
+        :e.sport==='Diving'
+          ?['Dive 1','Dive 2','Dive 3','Dive 4','Dive 5']
+          :['Round 1','Round 2','Final'];
+    const totals=ordered.map((_,i)=>results.find(r=>r.athleteId===ordered[i].id)?.value??Math.max(1,(results[0]?.value||80)-(i*1.2+1)));
+    const rounds=labels.map((_,ri)=>ordered.map((_,i)=>{
+      if(apparatus)return totals[i];
+      const remaining=labels.length-ri;
+      const previous=0;
+      const base=totals[i]/labels.length;
+      return Math.max(0,base+(Math.random()*.5-.25)+(ri===labels.length-1&&i===0?.12:0)-previous/Math.max(1,remaining));
+    }));
+    if(!apparatus){
+      ordered.forEach((_,i)=>{
+        const subtotal=rounds.reduce((sum,r)=>sum+r[i],0);
+        rounds[rounds.length-1][i]+=totals[i]-subtotal;
+      });
+    }
+    return{type:'judged',rounds,labels,cumulative:!apparatus};
   }
   if(e.format==='fencing'){
     const [a,b,c,d]=ordered;const semi1={stage:'Semifinal 1',left:15,right:9+rand(6),leftId:a.id,rightId:d.id,winnerId:a.id};const semi2Winner=Math.random()<.65?b:c;const semi2Loser=semi2Winner.id===b.id?c:b;const semi2={stage:'Semifinal 2',left:15,right:10+rand(5),leftId:semi2Winner.id,rightId:semi2Loser.id,winnerId:semi2Winner.id};const finalWinner=ordered[0];const other=finalWinner.id===a.id?semi2Winner:a;return{type:'fencing',bouts:[semi1,semi2,{stage:'Gold-medal bout',left:15,right:10+rand(5),leftId:finalWinner.id,rightId:other.id,winnerId:finalWinner.id}]};
@@ -288,13 +346,23 @@ function resolveEvent(e:FinalEvent,athletes:Athlete[],y:number,records:Record<st
   const favorite=ordered[0];
   const winner=ordered.find(a=>a.id===results[0]?.athleteId);
   const favPos=results.findIndex(r=>r.athleteId===favorite?.id);
-  let headline='Olympic final completed.';
+  let headline=`The ${e.name} final has produced a new Olympic champion.`;
   if (winner && favorite) {
-    headline=winner.id!==favorite.id
-      ? `Big upset! ${winner.name} defeats favorite ${favorite.name}, who finishes ${favPos===1?'with silver':favPos===2?'with bronze':'outside the medals'}.`
-      : `${winner.name} confirms the favorite's status and becomes Olympic champion.`;
-    if(results[0]?.record==='WR')headline=`NEW WORLD RECORD! ${winner.name} wins with ${results[0].mark}, improving the previous global standard.`;
-    if((winner.gold ?? 0)>=4)headline=`History made: ${winner.name} claims a fifth Olympic gold.`;
+    if(winner.id!==favorite.id){
+      headline=`A major upset in ${e.name}: ${winner.name} takes gold ahead of favorite ${favorite.name}, who finishes ${favPos===1?'second':favPos===2?'third':'outside the medals'}.`;
+    }else{
+      const variants=[
+        `${winner.name} delivers under pressure and wins the ${e.name} Olympic title.`,
+        `Favorite ${winner.name} controls the ${e.name} final and leaves with gold.`,
+        `${winner.name} turns expectation into victory, becoming Olympic champion in ${e.name}.`,
+        `No upset this time: ${winner.name} proves strongest when the ${e.name} medals are decided.`
+      ];
+      headline=variants[(winner.name.length+e.name.length)%variants.length];
+    }
+    const eventCount=(winner.events||[winner.event]).length;
+    if(eventCount>1)headline+=` It is one of ${eventCount} events on ${winner.name}'s program at these Games.`;
+    if(results[0]?.record==='WR')headline=`NEW WORLD RECORD in ${e.name}! ${winner.name} wins with ${results[0].mark}, improving the previous global standard.`;
+    if((winner.gold ?? 0)>=4)headline=`History in ${e.name}: ${winner.name} claims a fifth Olympic gold and strengthens an all-time great career.`;
   }
   const out={...e,resolved:true,results,headline};
   return{event:out,watch:generateWatch(out,competitionOrder,results)};
@@ -304,7 +372,11 @@ function initial():Save {const athletes=createAthletes(1896);return{version:6,ye
 function hostOptions(year:number){const idx=Math.max(0,Math.floor((year-1900)/4));return[HOSTS[idx%HOSTS.length],HOSTS[(idx+5)%HOSTS.length],HOSTS[(idx+11)%HOSTS.length]]}
 
 function Game({slotId,initialSave,onExit}:{slotId:number;initialSave:Save;onExit:()=>void}){
-  const [save,setSave]=useState<Save>(initialSave);
+  const [save,setSave]=useState<Save>(()=>({
+    ...initialSave,
+    athletes:initialSave.athletes.map(a=>({...a,events:a.events?.length?a.events:[a.event]})),
+    history:initialSave.history.map(h=>({...h,qualificationCounts:h.qualificationCounts||{},medals:h.medals||{}}))
+  }));
   const [view,setView]=useState<View>('chronicle');
   const [gamesTab,setGamesTab]=useState<GamesTab>('daily');
   const [preview,setPreview]=useState<string|null>(null);
@@ -314,12 +386,18 @@ function Game({slotId,initialSave,onExit}:{slotId:number;initialSave:Save;onExit
   const [almanacTab,setAlmanacTab]=useState<AlmanacTab>('athletes');
   const [sportFilter,setSportFilter]=useState('All');
   const [trendMetric,setTrendMetric]=useState<'medals'|'golds'|'medalsCum'|'goldsCum'>('medalsCum');
+  const [athleteStatus,setAthleteStatus]=useState<'active'|'retired'|'all'>('active');
+  const [almanacAthleteStatus,setAlmanacAthleteStatus]=useState<'active'|'retired'|'all'>('all');
+  const [selectedAthlete,setSelectedAthlete]=useState<string|null>(null);
+  const [selectedCountry,setSelectedCountry]=useState<string|null>(null);
 
   const persist=(s:Save)=>{setSave(s);void writeSlot(slotId,s)};
   const today=save.events.filter(e=>e.day===save.day);
   const event=save.events.find(e=>e.id===preview);
   const resultEvent=save.events.find(e=>e.id===result);
-  const active=save.athletes.filter(a=>!a.retired).sort((a,b)=>b.overall-a.overall);
+  const visibleAthletes=save.athletes
+    .filter(a=>athleteStatus==='all'||(athleteStatus==='active'?!a.retired:a.retired))
+    .sort((a,b)=>b.overall-a.overall);
   const medalRows=useMemo(()=>Object.entries(save.medals).sort((a,b)=>b[1].gold-a[1].gold||b[1].silver-a[1].silver||b[1].bronze-a[1].bronze),[save.medals]);
   const sports=useMemo(()=>['All',...Array.from(new Set([...save.ledger.map(r=>r.sport),...save.events.map(e=>e.sport)])).sort()],[save.ledger,save.events]);
 
@@ -333,7 +411,19 @@ function Game({slotId,initialSave,onExit}:{slotId:number;initialSave:Save;onExit
   function nextEvent(){const e=today.find(x=>!x.resolved);if(!e)return;if(e.star)setPreview(e.id);else simulateEvent(e,true)}
   function simulateAllNormal(){let current=save;for(const e of today.filter(x=>!x.resolved&&!x.star)){const pkg=resolveEvent(e,current.athletes,current.olympicYear,current.records);const r=pkg.event;let medals={...current.medals},athletes=[...current.athletes],ledger=[...current.ledger],appearances=[...current.appearances],records={...current.records};for(const athleteId of r.contenders){const a=athletes.find(x=>x.id===athleteId);if(a&&!appearances.some(x=>x.year===current.olympicYear&&x.athleteId===a.id&&x.event===r.name))appearances.push({year:current.olympicYear,athleteId:a.id,name:a.name,country:a.country,sport:r.sport,event:r.name})}for(const x of r.results){medals={...medals,[x.country]:{...medals[x.country],[x.medal]:medals[x.country][x.medal]+1}};athletes=athletes.map(a=>a.id===x.athleteId?{...a,[x.medal]:a[x.medal]+1}:a);ledger.push({year:current.olympicYear,host:current.host,sport:r.sport,event:r.name,gender:r.gender,athleteId:x.athleteId,name:x.name,country:x.country,medal:x.medal,mark:x.mark,value:x.value})}const winner=r.results[0];if(winner?.record){const key=recordKey(r);records[key]={key,sport:r.sport,event:r.name,gender:r.gender,year:current.olympicYear,host:current.host,athleteId:winner.athleteId,name:winner.name,country:winner.country,mark:winner.mark,value:winner.value,lowerBetter:lowerBetter(r.format)}}current={...current,events:current.events.map(x=>x.id===r.id?r:x),medals,athletes,ledger,appearances,records}}persist(current)}
   function moveDay(){if(today.some(e=>!e.resolved))return;if(save.day<12)persist({...save,day:save.day+1});else persist({...save,phase:'complete'})}
-  function closeGames(){const champ=medalRows[0]?.[0]||'USA';const memory=save.events.filter(e=>e.star&&e.headline).slice(0,4).map(e=>e.headline).join(' ');persist({...save,phase:'complete',pendingHost:true,history:[...save.history,{year:save.olympicYear,host:save.host,champion:champ,memory}],annualNews:[`${save.host} ${save.olympicYear} enters history. ${NAMES[champ]} led the medal table.`]});setView('chronicle')}
+  function closeGames(){
+    const champ=medalRows[0]?.[0]||'USA';
+    const expected=new Set(['USA','GBR','FRA','GER','RUS','CHN']);
+    const surprise=medalRows
+      .filter(([country,medals])=>!expected.has(country)&&medals.gold>0)
+      .sort((a,b)=>b[1].gold-a[1].gold||(b[1].gold+b[1].silver+b[1].bronze)-(a[1].gold+a[1].silver+a[1].bronze))[0];
+    const starStories=save.events.filter(e=>e.star&&e.headline).slice(0,4).map(e=>e.headline);
+    const medalStory=`${NAMES[champ]} wins the medal-table race with ${save.medals[champ].gold} gold medals.`;
+    const surpriseStory=surprise?`${NAMES[surprise[0]]} becomes the breakthrough nation of the Games, collecting ${surprise[1].gold} gold and ${surprise[1].gold+surprise[1].silver+surprise[1].bronze} total medals.`:'';
+    const memory=[medalStory,surpriseStory,...starStories].filter(Boolean).join(' ');
+    persist({...save,phase:'complete',pendingHost:true,history:[...save.history,{year:save.olympicYear,host:save.host,champion:champ,memory,qualificationCounts:{...save.qualification.counts},medals:Object.fromEntries(Object.entries(save.medals).map(([country,medals])=>[country,{...medals}]))}],annualNews:[`${save.host} ${save.olympicYear} enters history. ${medalStory}`,surpriseStory||'The medal table confirms the established powers, but new athletes have changed the record book.']});
+    setView('chronicle')
+  }
 
   const opts=hostOptions(save.olympicYear+4);
   return <div className={styles.app}>
@@ -343,11 +433,13 @@ function Game({slotId,initialSave,onExit}:{slotId:number;initialSave:Save;onExit
     {view==='chronicle'&&<main className={styles.layout}><section className={styles.hero}><div><span className={styles.eyebrow}>{save.phase==='games'?'THE GAMES ARE UNDERWAY':save.olympicYear===1896?'THE FIRST MODERN OLYMPIAD':`${save.olympicYear-save.year} YEARS TO ${save.host.toUpperCase()}`}</span><h1>{save.olympicYear===1896?'The Olympic story begins in Athens.':'Champions rise long before the flame is lit.'}</h1><p>Follow qualification, emerging stars, changing national programs and the stories that make the Games the final ecstasy of each four-year cycle.</p></div><div className={styles.yearCard}><small>THE YEAR</small><b>{save.year}</b><span>{templatesFor(save.olympicYear).length} medal contests</span></div></section><section className={styles.section}><span className={styles.eyebrow}>Annual chronicle</span><h2>What changed this year</h2><div className={styles.storyGrid}>{save.annualNews.map((n,i)=><article className={`${styles.story} ${[styles.gold,styles.blue,styles.green][i%3]}`} key={i}><small>{i===0?'LEAD STORY':'FROM THE OLYMPIC WORLD'}</small><h3>{n}</h3></article>)}</div></section><button className={styles.primary} onClick={save.olympicYear===1896&&save.phase==='between'?open1896:save.phase==='games'?()=>setView('games'):advanceYear}>{save.olympicYear===1896&&save.phase==='between'?'Open Athens 1896':save.phase==='games'?'Return to the Games':save.year>=save.olympicYear?'Begin the Olympic Games':'Advance one year'} →</button></main>}
     {view==='qualification'&&<main className={styles.layout}><section className={styles.gamesHero}><div><span className={styles.eyebrow}>ROAD TO {save.host.toUpperCase()} {save.olympicYear}</span><h1>{save.qualification.closed}/{save.qualification.total} contests closed</h1><p>Qualification develops throughout the four-year cycle. Star debuts and first national entries become part of the chronicle.</p></div><div className={styles.yearCard}><small>QUALIFIED ENTRIES</small><b>{Object.values(save.qualification.counts).reduce((a,b)=>a+b,0)}</b><span>{Object.values(save.qualification.counts).filter(Boolean).length} nations represented</span></div></section><section className={styles.split}><div className={styles.panel}><span className={styles.eyebrow}>Qualification standings</span>{Object.entries(save.qualification.counts).sort((a,b)=>b[1]-a[1]).slice(0,18).map(([c,n],i)=><div className={styles.athleteRow} key={c}><b>{i+1}</b><Flag code={c} size={28}/><div><strong>{NAMES[c]}</strong><span>{n} athletes / teams</span></div><em>{n}</em></div>)}</div><div className={styles.panel}><span className={styles.eyebrow}>Qualification news</span>{save.qualification.news.slice(0,12).map((n,i)=><div className={styles.qualNews} key={i}><small>{i+1}</small><p>{n}</p></div>)}</div></section>{save.phase==='between'&&<button className={styles.primary} onClick={advanceYear}>{save.year>=save.olympicYear?'Begin the Games':'Advance qualification year'} →</button>}</main>}
     {view==='games'&&<main className={styles.layout}><section className={styles.gamesHero}><div><span className={styles.eyebrow}>{save.host.toUpperCase()} {save.olympicYear}</span><h1>{save.phase==='complete'?'The Games enter history':`Day ${save.day} of 12`}</h1><p>{save.phase==='complete'?'The medal race is over. The great performances and disappointments are now part of the archive.':'Every final is listed by day. Ordinary finals resolve quickly; Star Events can be watched without spoilers.'}</p></div><div className={styles.rings}>◯ ◯ ◯ ◯ ◯</div></section><div className={styles.subTabs}>{(['daily','all','medals'] as GamesTab[]).map(t=><button className={gamesTab===t?styles.navActive:''} onClick={()=>setGamesTab(t)} key={t}>{t==='daily'?'DAILY RESULTS':t==='all'?'ALL RESULTS':'MEDAL TABLE'}</button>)}</div>{save.phase==='complete'?<section className={styles.memory}><span className={styles.eyebrow}>How history remembers the Games</span><h2>{save.host} {save.olympicYear}</h2><p>{save.events.filter(e=>e.star&&e.headline).slice(0,5).map(e=>e.headline).join(' ')}</p><button className={styles.primary} onClick={closeGames}>Select the next host →</button></section>:gamesTab==='medals'?<Medals rows={medalRows}/>:gamesTab==='all'?<AllResults events={save.events}/>:<><div className={styles.dayNav}>{Array.from({length:12},(_,i)=>i+1).map(d=><button key={d} className={d===save.day?styles.dayActive:''} onClick={()=>persist({...save,day:d})}>DAY {d}</button>)}</div><section className={styles.section}><div className={styles.sectionHead}><div><span className={styles.eyebrow}>Daily program</span><h2>Finals on Day {save.day}</h2></div><span>{today.filter(e=>e.resolved).length}/{today.length} complete</span></div><div className={styles.eventGrid}>{today.map(e=><article key={e.id} className={`${styles.eventCard} ${e.star?styles.starCard:''}`}><div className={styles.eventTop}><span className={styles.sportLabel}><SportIcon id={sportIconId(e.sport)} size={18}/>{e.sport}</span><span>{e.star?'★ STAR EVENT':'FINAL'}</span></div><h3>{e.name}</h3><p>{e.resolved?e.headline:e.hook}</p>{e.resolved?<div className={styles.podiumMini}>{e.results.map(r=><div key={r.medal}><span>{r.medal==='gold'?'🥇':r.medal==='silver'?'🥈':'🥉'}</span><Flag code={r.country} size={22}/><b>{r.name}</b><em>{r.mark}{r.record&&<strong className={styles.recordBadge}>{r.record}</strong>}</em></div>)}</div>:<div className={styles.favorite}><b>{save.athletes.find(a=>a.id===e.contenders[0])?.name}</b><span>{e.star?'Marquee final — preview available':'Qualified field ready'}</span></div>}{!e.resolved&&e.star&&<button onClick={()=>setPreview(e.id)}>Open event preview</button>}</article>)}</div></section><div className={styles.actionRow}><button className={styles.secondary} onClick={nextEvent}>Simulate next event</button><button className={styles.secondary} onClick={simulateAllNormal}>Simulate all normal events</button><button className={styles.primary} disabled={today.some(e=>!e.resolved)} onClick={moveDay}>{save.day===12?'Finish the Games':'Next day'} →</button></div></>}</main>}
-    {view==='athletes'&&<main className={styles.layout}><section className={styles.section}><span className={styles.eyebrow}>Living careers</span><h1>Athletes of the age</h1><div className={styles.athleteGrid}>{active.slice(0,60).map(a=><article className={styles.athleteCard} key={a.id}><Flag code={a.country} size={34}/><small>{a.country} · {a.sport}</small><h3>{a.name}</h3><p>{a.event}</p><div className={styles.metrics}><span><b>{a.overall}</b> rating</span><span><b>{age(a,save.year)}</b> age</span><span><b>{a.gold+a.silver+a.bronze}</b> medals</span></div><em>{a.trait}</em></article>)}</div></section></main>}
-    {view==='almanac'&&<Almanac save={save} tab={almanacTab} setTab={setAlmanacTab} sport={sportFilter} setSport={setSportFilter} sports={sports} metric={trendMetric} setMetric={setTrendMetric}/>} 
+    {view==='athletes'&&<main className={styles.layout}><section className={styles.section}><span className={styles.eyebrow}>Living careers</span><h1>Athletes of the age</h1><div className={styles.filters}><label>STATUS<select value={athleteStatus} onChange={e=>setAthleteStatus(e.target.value as typeof athleteStatus)}><option value="active">Active</option><option value="retired">Retired</option><option value="all">All athletes</option></select></label></div><div className={styles.athleteGrid}>{visibleAthletes.slice(0,100).map(a=><button className={styles.athleteCard} key={a.id} onClick={()=>setSelectedAthlete(a.id)}><Flag code={a.country} size={34}/><small>{a.country} · {a.sport} · {a.retired?'RETIRED':'ACTIVE'}</small><h3>{a.name}</h3><p>{(a.events||[a.event]).join(' · ')}</p><div className={styles.metrics}><span><b>{a.overall}</b> rating</span><span><b>{age(a,save.year)}</b> age</span><span><b>{a.gold+a.silver+a.bronze}</b> medals</span></div><em>{a.trait}</em></button>)}</div></section></main>}
+    {view==='almanac'&&<Almanac save={save} tab={almanacTab} setTab={setAlmanacTab} sport={sportFilter} setSport={setSportFilter} sports={sports} metric={trendMetric} setMetric={setTrendMetric} athleteStatus={almanacAthleteStatus} setAthleteStatus={setAlmanacAthleteStatus} openAthlete={setSelectedAthlete} openCountry={setSelectedCountry}/>} 
     {event&&<Preview event={event} athletes={save.athletes} year={save.olympicYear} close={()=>setPreview(null)} simulate={()=>simulateEvent(event,true)} view={()=>viewEvent(event)}/>} 
     {watch&&<Watch event={watch.event} athletes={save.athletes} payload={watch.payload} step={watchStep} setStep={setWatchStep} close={()=>{setWatch(null);setResult(watch.event.id)}}/>}
-    {resultEvent&&<ResultModal event={resultEvent} close={()=>setResult(null)}/>} 
+    {resultEvent&&<ResultModal event={resultEvent} close={()=>setResult(null)}/>}
+    {selectedAthlete&&<AthleteProfile athlete={save.athletes.find(a=>a.id===selectedAthlete)} save={save} close={()=>setSelectedAthlete(null)}/>}
+    {selectedCountry&&<CountryProfile country={selectedCountry} save={save} close={()=>setSelectedCountry(null)}/>}
   </div>
 }
 
@@ -398,7 +490,12 @@ function WatchBody({event,athletes,payload,step}:{event:FinalEvent;athletes:Athl
   if(payload.type==='race'){const c=payload.checkpoints[step];const leader=Math.max(...c.values);return <><div className={styles.liveClock}>{c.label}</div><div className={styles.liveRows}>{athletes.map((a,i)=><div className={c.values[i]===leader?styles.liveLeader:undefined} key={a.id}><Flag code={a.country} size={26}/><b>{a.name}</b><span>{a.country}</span><strong>{c.finished?(event.results.find(r=>r.athleteId===a.id)?.mark||`${c.values[i].toFixed(1)}%`):`${c.values[i].toFixed(1)}%`}</strong><div className={styles.track}><i style={{width:`${c.values[i]}%`}}/></div></div>)}</div></>}
   if(payload.type==='field'){const totals=athletes.map((_,ai)=>Math.max(0,...payload.attempts[ai].slice(0,step+1).filter((v):v is number=>v!==null)));const leader=totals.indexOf(Math.max(...totals));return <AttemptTable athletes={athletes} leaderIndex={leader} headers={Array.from({length:6},(_,i)=>`ATT ${i+1}`)} cells={(ai,ri)=>ri<=step?(payload.attempts[ai]?.[ri]===null?'FOUL':`${(payload.attempts[ai]?.[ri]??0).toFixed(2)}${payload.unit}`):'—'} total={ai=>`${totals[ai].toFixed(2)}${payload.unit}`}/>}
   if(payload.type==='vertical'){const totals=athletes.map((_,ai)=>payload.attempts[ai].slice(0,step+1).reduce((n,v)=>n+(v==='O'?1:0),0));const leader=totals.indexOf(Math.max(...totals));return <AttemptTable athletes={athletes} leaderIndex={leader} headers={payload.heights.map(h=>`${h.toFixed(2)}m`)} cells={(ai,ri)=>ri<=step?payload.attempts[ai]?.[ri]||'—':'—'}/>}
-  if(payload.type==='judged'){const totals=athletes.map((_,ai)=>payload.rounds.slice(0,step+1).reduce((sum,r)=>sum+(r[ai]||0),0));const leader=totals.indexOf(Math.max(...totals));return <AttemptTable athletes={athletes} leaderIndex={leader} headers={payload.rounds.map((_,i)=>`RD${i+1}`)} cells={(ai,ri)=>ri<=step?(payload.rounds[ri]?.[ai]??0).toFixed(2):'—'} total={ai=>totals[ai].toFixed(2)}/>}
+  if(payload.type==='judged'){
+    const shown=payload.rounds.slice(0,step+1);
+    const totals=athletes.map((_,ai)=>payload.cumulative?shown.reduce((sum,r)=>sum+(r[ai]||0),0):(shown.at(-1)?.[ai]||0));
+    const leader=totals.indexOf(Math.max(...totals));
+    return <AttemptTable athletes={athletes} leaderIndex={leader} headers={payload.labels} cells={(ai,ri)=>ri<=step?(payload.rounds[ri]?.[ai]??0).toFixed(2):'—'} total={ai=>totals[ai].toFixed(2)}/>
+  }
   if(payload.type==='fencing'){const b=payload.bouts[step],left=athletes.find(a=>a.id===b.leftId),right=athletes.find(a=>a.id===b.rightId);return <div className={styles.bout}><small>{b.stage}</small><div><span><Flag code={left?.country||''} size={38}/><b>{left?.name}</b></span><strong>{b.left}</strong><em>touches</em></div><i>vs</i><div><span><Flag code={right?.country||''} size={38}/><b>{right?.name}</b></span><strong>{b.right}</strong><em>touches</em></div></div>}
   if(payload.type==='weightlifting'){const totals=athletes.map((_,ai)=>{const shown=payload.lifts[ai].slice(0,step+1);const sn=Math.max(0,...shown.filter(x=>x.phase.startsWith('Snatch')&&x.success).map(x=>x.weight));const cj=Math.max(0,...shown.filter(x=>x.phase.startsWith('C&J')&&x.success).map(x=>x.weight));return sn+cj});const leader=totals.indexOf(Math.max(...totals));return <AttemptTable athletes={athletes} leaderIndex={leader} headers={['SN 1','SN 2','SN 3','C&J 1','C&J 2','C&J 3']} cells={(ai,ri)=>ri<=step?(payload.lifts[ai]?.[ri]?`${payload.lifts[ai][ri].weight}kg ${payload.lifts[ai][ri].success?'✓':'✕'}`:'—'):'—'} total={ai=>`${totals[ai]}kg`}/>}
   if(payload.type==='shooting'){const totals=athletes.map((_,ai)=>payload.rounds.slice(0,step+1).reduce((sum,r)=>sum+(r[ai]||0),0));const leader=totals.indexOf(Math.max(...totals));return <AttemptTable athletes={athletes} leaderIndex={leader} headers={payload.rounds.map((_,i)=>`RD${i+1}`)} cells={(ai,ri)=>ri<=step?(payload.rounds[ri]?.[ai]??0).toFixed(payload.unit==='points'&&event.format==='shootingPrecision'?1:0):'—'} total={ai=>totals[ai].toFixed(event.format==='shootingPrecision'?1:0)}/>}
@@ -407,18 +504,54 @@ function WatchBody({event,athletes,payload,step}:{event:FinalEvent;athletes:Athl
   if(payload.type==='golf')return <AttemptTable athletes={athletes} headers={payload.rounds.map((_,i)=>`RD${i+1}`)} cells={(ai,ri)=>ri<=step?String(payload.rounds[ri]?.[ai]):'—'} total={(ai)=>String(payload.rounds.slice(0,step+1).reduce((s,r)=>s+(r[ai]||0),0))}/>;
   return <AttemptTable athletes={athletes} headers={payload.races.map((_,i)=>`RACE ${i+1}`)} cells={(ai,ri)=>ri<=step?`${payload.races[ri]?.[ai]}th`:'—'} total={(ai)=>String(payload.races.slice(0,step+1).reduce((s,r)=>s+(r[ai]||0),0))}/>;
 }
-function AttemptTable({athletes,headers,cells,total,leaderIndex}:{athletes:Athlete[];headers:string[];cells:(athlete:number,round:number)=>string;total?:(athlete:number)=>string;leaderIndex?:number}){return <div className={styles.attemptTable}><div className={styles.attemptHead}><span>ATHLETE</span>{headers.map(h=><b key={h}>{h}</b>)}{total&&<b>TOTAL</b>}</div>{athletes.map((a,ai)=><div className={ai===leaderIndex?styles.tableLeader:undefined} key={a.id}><span><Flag code={a.country} size={23}/><b>{a.name}</b></span>{headers.map((_,ri)=><em key={ri}>{cells(ai,ri)}</em>)}{total&&<strong>{total(ai)}</strong>}</div>)}</div>}
+function AttemptTable({athletes,headers,cells,total,leaderIndex}:{athletes:Athlete[];headers:string[];cells:(athlete:number,round:number)=>string;total?:(athlete:number)=>string;leaderIndex?:number}){
+  const grid={gridTemplateColumns:`minmax(220px,1.5fr) repeat(${headers.length},minmax(76px,.55fr)) ${total?'minmax(88px,.6fr)':''}`};
+  return <div className={styles.attemptTable}><div className={styles.attemptHead} style={grid}><span>ATHLETE</span>{headers.map(h=><b key={h}>{h}</b>)}{total&&<b>TOTAL</b>}</div>{athletes.map((a,ai)=><div style={grid} className={ai===leaderIndex?styles.tableLeader:undefined} key={a.id}><span><Flag code={a.country} size={23}/><b>{a.name}</b></span>{headers.map((_,ri)=><em key={ri}>{cells(ai,ri)}</em>)}{total&&<strong>{total(ai)}</strong>}</div>)}</div>
+}
 function ResultModal({event,close}:{event:FinalEvent;close:()=>void}){return <div className={styles.modalBackdrop}><div className={styles.modal}><button className={styles.close} onClick={close}>×</button><span className={styles.eyebrow}>FINAL RESULT · {event.sport}</span><div className={styles.modalTitle}><SportIcon id={sportIconId(event.sport)} size={42}/><h2>{event.name}</h2></div><div className={styles.reveal}><small>OLYMPIC CHAMPION</small><h3>{event.results[0]?.name}</h3><div className={styles.championFlag}><Flag code={event.results[0]?.country} size={46}/>{NAMES[event.results[0]?.country]}</div><b>{event.results[0]?.mark} {event.results[0]?.record&&<strong className={styles.recordBadge}>{event.results[0].record==='IR'?'INAUGURAL RECORD':'NEW WR!'}</strong>}</b><p>{event.headline}</p><div className={styles.finalPodium}>{event.results.map(r=><div key={r.medal}><span>{r.medal.toUpperCase()}</span><Flag code={r.country} size={24}/><b>{r.name}</b><em>{r.mark}{r.record&&<strong className={styles.recordBadge}>{r.record}</strong>}</em></div>)}</div></div></div></div>}
 
-function Almanac({save,tab,setTab,sport,setSport,sports,metric,setMetric}:{save:Save;tab:AlmanacTab;setTab:(t:AlmanacTab)=>void;sport:string;setSport:(s:string)=>void;sports:string[];metric:'medals'|'golds'|'medalsCum'|'goldsCum';setMetric:(m:'medals'|'golds'|'medalsCum'|'goldsCum')=>void}){
+
+function AthleteProfile({athlete,save,close}:{athlete?:Athlete;save:Save;close:()=>void}){
+  if(!athlete)return null;
+  const appearances=[...new Set(save.appearances.filter(a=>a.athleteId===athlete.id).map(a=>a.year))].sort();
+  const history=appearances.map(year=>{
+    const results=save.ledger.filter(r=>r.athleteId===athlete.id&&r.year===year);
+    return{year,host:results[0]?.host||save.history.find(h=>h.year===year)?.host||'Olympic Games',events:[...new Set(save.appearances.filter(a=>a.athleteId===athlete.id&&a.year===year).map(a=>a.event))],gold:results.filter(r=>r.medal==='gold').length,silver:results.filter(r=>r.medal==='silver').length,bronze:results.filter(r=>r.medal==='bronze').length,results};
+  });
+  return <div className={styles.modalBackdrop}><div className={`${styles.modal} ${styles.profileModal}`}><button className={styles.close} onClick={close}>×</button><div className={styles.profileHeader}><Flag code={athlete.country} size={56}/><div><span className={styles.eyebrow}>{athlete.retired?'Retired athlete':'Active athlete'} · {athlete.sport}</span><h2>{athlete.name}</h2><p>{NAMES[athlete.country]} · age {age(athlete,save.year)} · {athlete.trait}</p></div></div><div className={styles.profileStats}><span><b>{athlete.overall}</b>Current rating</span><span><b>{athlete.potential}</b>Potential</span><span><b>{athlete.form}</b>Form</span><span><b>{athlete.gold}</b>Gold</span><span><b>{athlete.silver}</b>Silver</span><span><b>{athlete.bronze}</b>Bronze</span></div><section className={styles.profileSection}><h3>Olympic program</h3><div className={styles.eventChips}>{(athlete.events||[athlete.event]).map(event=><span key={event}>{event}</span>)}</div></section><section className={styles.profileSection}><h3>Career by Games</h3>{history.length?<div className={styles.profileHistory}>{history.map(row=><article key={row.year}><div><b>{row.host} {row.year}</b><span>{row.events.join(' · ')}</span></div><strong>{row.gold}G · {row.silver}S · {row.bronze}B</strong>{row.results.map(result=><p key={`${result.event}-${result.medal}`}><span>{result.medal.toUpperCase()}</span>{result.event} — {result.mark}</p>)}</article>)}</div>:<p>No Olympic appearance has been completed yet.</p>}</section></div></div>
+}
+function CountryProfile({country,save,close}:{country:string;save:Save;close:()=>void}){
+  const rows=save.history.map(h=>{const medals=h.medals?.[country]||{gold:0,silver:0,bronze:0};return{year:h.year,host:h.host,qualified:h.qualificationCounts?.[country]||0,...medals}}).filter(r=>r.qualified||r.gold||r.silver||r.bronze);
+  if(save.phase==='games'||save.phase==='complete'){const current=save.medals[country]||{gold:0,silver:0,bronze:0};if(!rows.some(r=>r.year===save.olympicYear))rows.push({year:save.olympicYear,host:save.host,qualified:save.qualification.counts[country]||0,...current})}
+  const totals=rows.reduce((sum,r)=>({gold:sum.gold+r.gold,silver:sum.silver+r.silver,bronze:sum.bronze+r.bronze}),{gold:0,silver:0,bronze:0});
+  const stars=save.athletes.filter(a=>a.country===country).sort((a,b)=>(b.gold+b.silver+b.bronze)-(a.gold+a.silver+a.bronze)||b.overall-a.overall).slice(0,5);
+  return <div className={styles.modalBackdrop}><div className={`${styles.modal} ${styles.profileModal}`}><button className={styles.close} onClick={close}>×</button><div className={styles.profileHeader}><Flag code={country} size={64}/><div><span className={styles.eyebrow}>National Olympic history</span><h2>{NAMES[country]}</h2><p>{rows.length} Olympic appearances recorded</p></div></div><div className={styles.profileStats}><span><b>{totals.gold}</b>Gold</span><span><b>{totals.silver}</b>Silver</span><span><b>{totals.bronze}</b>Bronze</span><span><b>{totals.gold+totals.silver+totals.bronze}</b>Total medals</span></div>{stars.length>0&&<section className={styles.profileSection}><h3>Leading athletes</h3><div className={styles.eventChips}>{stars.map(a=><span key={a.id}>{a.name} · {a.gold+a.silver+a.bronze} medals</span>)}</div></section>}<section className={styles.profileSection}><h3>Games by Games</h3><div className={styles.tableScroll}><div className={`${styles.dataTable} ${styles.countryHistoryTable}`}><div className={styles.tableHead}><span>OLYMPIC GAMES</span><b>ATHLETES / TEAMS</b><b>MEDALS</b><b>GOLD</b><b>SILVER</b><b>BRONZE</b></div>{rows.map(r=><div key={r.year}><span><strong>{r.host} {r.year}</strong></span><em>{r.qualified}</em><em>{r.gold+r.silver+r.bronze}</em><em>{r.gold}</em><em>{r.silver}</em><em>{r.bronze}</em></div>)}</div></div></section></div></div>
+}
+function Almanac({save,tab,setTab,sport,setSport,sports,metric,setMetric,athleteStatus,setAthleteStatus,openAthlete,openCountry}:{save:Save;tab:AlmanacTab;setTab:(t:AlmanacTab)=>void;sport:string;setSport:(s:string)=>void;sports:string[];metric:'medals'|'golds'|'medalsCum'|'goldsCum';setMetric:(m:'medals'|'golds'|'medalsCum'|'goldsCum')=>void;athleteStatus:'active'|'retired'|'all';setAthleteStatus:(s:'active'|'retired'|'all')=>void;openAthlete:(id:string)=>void;openCountry:(country:string)=>void}){
   const filtered=sport==='All'?save.ledger:save.ledger.filter(r=>r.sport===sport);
-  const athleteRows=useMemo(()=>{const m=new Map<string,{name:string;country:string;sport:string;years:Set<number>;gold:number;silver:number;bronze:number}>();for(const a of save.appearances.filter(a=>sport==='All'||a.sport===sport)){const x=m.get(a.athleteId)||{name:a.name,country:a.country,sport:a.sport,years:new Set<number>(),gold:0,silver:0,bronze:0};x.years.add(a.year);m.set(a.athleteId,x)}for(const r of filtered){if(!r.athleteId)continue;const x=m.get(r.athleteId)||{name:r.name,country:r.country,sport:r.sport,years:new Set<number>(),gold:0,silver:0,bronze:0};x.years.add(r.year);x[r.medal]++;m.set(r.athleteId,x)}return [...m.values()].sort((a,b)=>b.years.size-a.years.size||(b.gold+b.silver+b.bronze)-(a.gold+a.silver+a.bronze)||b.gold-a.gold)},[filtered,save.appearances,sport]);
+  const athleteRows=useMemo(()=>{
+    const m=new Map<string,{id:string;name:string;country:string;sport:string;retired:boolean;years:Set<number>;gold:number;silver:number;bronze:number}>();
+    for(const a of save.appearances.filter(a=>sport==='All'||a.sport===sport)){
+      const current=save.athletes.find(x=>x.id===a.athleteId);
+      const x=m.get(a.athleteId)||{id:a.athleteId,name:a.name,country:a.country,sport:a.sport,retired:current?.retired??true,years:new Set<number>(),gold:0,silver:0,bronze:0};
+      x.years.add(a.year);m.set(a.athleteId,x)
+    }
+    for(const r of filtered){
+      if(!r.athleteId)continue;
+      const current=save.athletes.find(x=>x.id===r.athleteId);
+      const x=m.get(r.athleteId)||{id:r.athleteId,name:r.name,country:r.country,sport:r.sport,retired:current?.retired??true,years:new Set<number>(),gold:0,silver:0,bronze:0};
+      x.years.add(r.year);x[r.medal]++;m.set(r.athleteId,x)
+    }
+    return [...m.values()]
+      .filter(r=>athleteStatus==='all'||(athleteStatus==='active'?!r.retired:r.retired))
+      .sort((a,b)=>b.years.size-a.years.size||(b.gold+b.silver+b.bronze)-(a.gold+a.silver+a.bronze)||b.gold-a.gold)
+  },[filtered,save.appearances,save.athletes,sport,athleteStatus]);
   const countryRows=useMemo(()=>{const m=new Map<string,{country:string;years:Set<number>;gold:number;silver:number;bronze:number}>();for(const r of filtered){const x=m.get(r.country)||{country:r.country,years:new Set<number>(),gold:0,silver:0,bronze:0};x.years.add(r.year);x[r.medal]++;m.set(r.country,x)}return [...m.values()].sort((a,b)=>b.gold-a.gold||(b.gold+b.silver+b.bronze)-(a.gold+a.silver+a.bronze))},[filtered]);
   const records=Object.values(save.records).filter(r=>sport==='All'||r.sport===sport).sort((a,b)=>a.sport.localeCompare(b.sport)||a.event.localeCompare(b.event));
-  return <main className={styles.layout}><section className={styles.section}><span className={styles.eyebrow}>Historical archive</span><h1>Olympic Almanac</h1><div className={styles.subTabs}>{(['athletes','countries','records','trends'] as AlmanacTab[]).map(t=><button className={tab===t?styles.navActive:''} key={t} onClick={()=>setTab(t)}>{t.toUpperCase()}</button>)}</div><div className={styles.filters}><label>SPORT<select value={sport} onChange={e=>setSport(e.target.value)}>{sports.map(s=><option key={s}>{s}</option>)}</select></label>{tab==='trends'&&<label>METRIC<select value={metric} onChange={e=>setMetric(e.target.value as typeof metric)}><option value="medals">Medals by Games</option><option value="golds">Golds by Games</option><option value="medalsCum">Cumulative medals</option><option value="goldsCum">Cumulative golds</option></select></label>}</div>{tab==='athletes'&&<AlmanacAthletes rows={athleteRows}/>} {tab==='countries'&&<AlmanacCountries rows={countryRows}/>} {tab==='records'&&<RecordsTable records={records}/>} {tab==='trends'&&<TrendChart ledger={filtered} metric={metric}/>}</section></main>
+  return <main className={styles.layout}><section className={styles.section}><span className={styles.eyebrow}>Historical archive</span><h1>Olympic Almanac</h1><div className={styles.subTabs}>{(['athletes','countries','records','trends'] as AlmanacTab[]).map(t=><button className={tab===t?styles.navActive:''} key={t} onClick={()=>setTab(t)}>{t.toUpperCase()}</button>)}</div><div className={styles.filters}><label>SPORT<select value={sport} onChange={e=>setSport(e.target.value)}>{sports.map(s=><option key={s}>{s}</option>)}</select></label>{tab==='athletes'&&<label>STATUS<select value={athleteStatus} onChange={e=>setAthleteStatus(e.target.value as typeof athleteStatus)}><option value="all">All</option><option value="active">Active</option><option value="retired">Retired</option></select></label>}{tab==='trends'&&<label>METRIC<select value={metric} onChange={e=>setMetric(e.target.value as typeof metric)}><option value="medals">Medals by Games</option><option value="golds">Golds by Games</option><option value="medalsCum">Cumulative medals</option><option value="goldsCum">Cumulative golds</option></select></label>}</div>{tab==='athletes'&&<AlmanacAthletes rows={athleteRows} openAthlete={openAthlete}/>} {tab==='countries'&&<AlmanacCountries rows={countryRows} openCountry={openCountry}/>} {tab==='records'&&<RecordsTable records={records}/>} {tab==='trends'&&<TrendChart ledger={filtered} metric={metric}/>}</section></main>
 }
-function AlmanacAthletes({rows}:{rows:{name:string;country:string;sport:string;years:Set<number>;gold:number;silver:number;bronze:number}[]}){return <div className={styles.dataTable}><div className={styles.tableHead}><span>ATHLETE</span><b>GAMES</b><b>GOLD</b><b>SILVER</b><b>BRONZE</b><b>TOTAL</b></div>{rows.map((r,i)=><div key={`${r.name}-${i}`}><span><Flag code={r.country} size={24}/><span><strong>{r.name}</strong><small>{r.country} · {r.sport}</small></span></span><em>{r.years.size}</em><em>{r.gold}</em><em>{r.silver}</em><em>{r.bronze}</em><em>{r.gold+r.silver+r.bronze}</em></div>)}</div>}
-function AlmanacCountries({rows}:{rows:{country:string;years:Set<number>;gold:number;silver:number;bronze:number}[]}){return <div className={styles.dataTable}><div className={styles.tableHead}><span>COUNTRY</span><b>GAMES</b><b>GOLD</b><b>SILVER</b><b>BRONZE</b><b>TOTAL</b></div>{rows.map(r=><div key={r.country}><span><Flag code={r.country} size={24}/><strong>{NAMES[r.country]}</strong></span><em>{r.years.size}</em><em>{r.gold}</em><em>{r.silver}</em><em>{r.bronze}</em><em>{r.gold+r.silver+r.bronze}</em></div>)}</div>}
+function AlmanacAthletes({rows,openAthlete}:{rows:{id:string;name:string;country:string;sport:string;retired:boolean;years:Set<number>;gold:number;silver:number;bronze:number}[];openAthlete:(id:string)=>void}){return <div className={styles.tableScroll}><div className={styles.dataTable}><div className={styles.tableHead}><span>ATHLETE</span><b>STATUS</b><b>GAMES</b><b>GOLD</b><b>SILVER</b><b>BRONZE</b><b>TOTAL</b></div>{rows.map(r=><button type="button" key={r.id} onClick={()=>openAthlete(r.id)}><span><Flag code={r.country} size={24}/><span><strong>{r.name}</strong><small>{r.country} · {r.sport}</small></span></span><em>{r.retired?'Retired':'Active'}</em><em>{r.years.size}</em><em>{r.gold}</em><em>{r.silver}</em><em>{r.bronze}</em><em>{r.gold+r.silver+r.bronze}</em></button>)}</div></div>}
+function AlmanacCountries({rows,openCountry}:{rows:{country:string;years:Set<number>;gold:number;silver:number;bronze:number}[];openCountry:(country:string)=>void}){return <div className={styles.tableScroll}><div className={styles.dataTable}><div className={styles.tableHead}><span>COUNTRY</span><b>GAMES</b><b>GOLD</b><b>SILVER</b><b>BRONZE</b><b>TOTAL</b></div>{rows.map(r=><button type="button" key={r.country} onClick={()=>openCountry(r.country)}><span><Flag code={r.country} size={24}/><strong>{NAMES[r.country]}</strong></span><em>{r.years.size}</em><em>{r.gold}</em><em>{r.silver}</em><em>{r.bronze}</em><em>{r.gold+r.silver+r.bronze}</em></button>)}</div></div>}
 function RecordsTable({records}:{records:RecordEntry[]}){return <div className={styles.recordsGrid}>{records.map(r=><article key={r.key}><span>{r.sport} · {r.gender==='M'?'MEN':'WOMEN'}</span><h3>{r.event}</h3><b>{r.mark}</b><div><Flag code={r.country} size={25}/><strong>{r.name}</strong></div><small>{r.host} {r.year}</small></article>)}</div>}
 function TrendChart({ledger,metric}:{ledger:LedgerResult[];metric:'medals'|'golds'|'medalsCum'|'goldsCum'}){
   const years=[...new Set(ledger.map(r=>r.year))].sort();const totals=new Map<string,number>();for(const r of ledger)totals.set(r.country,(totals.get(r.country)||0)+(metric.includes('gold')?(r.medal==='gold'?1:0):1));const countries=[...totals.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5).map(x=>x[0]);const series=countries.map(country=>{let cum=0;return{country,values:years.map(year=>{const val=ledger.filter(r=>r.country===country&&r.year===year&&(metric.includes('gold')?r.medal==='gold':true)).length;if(metric.includes('Cum')){cum+=val;return cum}return val})}});const max=Math.max(1,...series.flatMap(s=>s.values));const width=900,height=360,pad=45;return <div className={styles.chartPanel}>{years.length?<><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Olympic medal trend chart"><line x1={pad} y1={height-pad} x2={width-pad} y2={height-pad}/><line x1={pad} y1={pad} x2={pad} y2={height-pad}/>{series.map((s,si)=>{const points=s.values.map((v,i)=>`${pad+(i/(Math.max(1,years.length-1)))*(width-pad*2)},${height-pad-(v/max)*(height-pad*2)}`).join(' ');return <polyline key={s.country} points={points} className={styles[`chartLine${si}`]}/>})}{years.map((y,i)=><text key={y} x={pad+(i/(Math.max(1,years.length-1)))*(width-pad*2)} y={height-15} textAnchor="middle">{y}</text>)}</svg><div className={styles.chartLegend}>{series.map((s,i)=><span key={s.country} className={styles[`chartLegend${i}`]}><Flag code={s.country} size={21}/>{NAMES[s.country]}</span>)}</div></>:<p>No completed results yet. Finish events to populate the historical trend.</p>}</div>}
