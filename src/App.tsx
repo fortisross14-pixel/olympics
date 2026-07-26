@@ -238,7 +238,7 @@ function generateWatch(e:FinalEvent,ordered:Athlete[],results:Result[]):WatchPay
     const count=e.sport==='Gymnastics'&&e.name.includes('All-Around')?6:4;
     const winning=results[0]?.value||85;
     const totals=ordered.map((a,i)=>results.find(r=>r.athleteId===a.id)?.value??Math.max(45,winning-(i*1.4+1)));
-    const rounds=Array.from({length:count},(_,ri)=>ordered.map((a,i)=>clamp(totals[i]/count+(Math.random()*.65-.325)+(ri===count-1&&i===0?.15:0),6,16)));
+    const rounds=Array.from({length:count},(_,ri)=>ordered.map((_,i)=>clamp(totals[i]/count+(Math.random()*.65-.325)+(ri===count-1&&i===0?.15:0),6,16)));
     return{type:'judged',rounds};
   }
   if(e.format==='fencing'){
@@ -285,10 +285,17 @@ function resolveEvent(e:FinalEvent,athletes:Athlete[],y:number,records:Record<st
     const key=recordKey(e),previous=records[key],isBetter=!previous||(lowerBetter(e.format)?results[0].value<previous.value:results[0].value>previous.value);
     if(isBetter)results[0].record=previous?'WR':'IR';
   }
-  const favorite=ordered[0],winner=ordered.find(a=>a.id===results[0]?.athleteId),favPos=results.findIndex(r=>r.athleteId===favorite?.id);
-  let headline=winner?.id!==favorite?.id?`Big upset! ${winner.name} defeats favorite ${favorite.name}, who finishes ${favPos===1?'with silver':favPos===2?'with bronze':'outside the medals'}.`:`${winner.name} confirms the favorite's status and becomes Olympic champion.`;
-  if(results[0]?.record==='WR')headline=`NEW WORLD RECORD! ${winner.name} wins with ${results[0].mark}, improving the previous global standard.`;
-  if(winner?.gold>=4)headline=`History made: ${winner.name} claims a fifth Olympic gold.`;
+  const favorite=ordered[0];
+  const winner=ordered.find(a=>a.id===results[0]?.athleteId);
+  const favPos=results.findIndex(r=>r.athleteId===favorite?.id);
+  let headline='Olympic final completed.';
+  if (winner && favorite) {
+    headline=winner.id!==favorite.id
+      ? `Big upset! ${winner.name} defeats favorite ${favorite.name}, who finishes ${favPos===1?'with silver':favPos===2?'with bronze':'outside the medals'}.`
+      : `${winner.name} confirms the favorite's status and becomes Olympic champion.`;
+    if(results[0]?.record==='WR')headline=`NEW WORLD RECORD! ${winner.name} wins with ${results[0].mark}, improving the previous global standard.`;
+    if((winner.gold ?? 0)>=4)headline=`History made: ${winner.name} claims a fifth Olympic gold.`;
+  }
   const out={...e,resolved:true,results,headline};
   return{event:out,watch:generateWatch(out,competitionOrder,results)};
 }
